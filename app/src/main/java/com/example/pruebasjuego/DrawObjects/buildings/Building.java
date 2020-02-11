@@ -4,7 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import com.example.pruebasjuego.DrawObjects.DrawActions;
 import com.example.pruebasjuego.DrawObjects.DrawObjectSubtype;
 import com.example.pruebasjuego.DrawObjects.DrawObjectType;
 import com.example.pruebasjuego.DrawObjects.GameObjects;
@@ -15,30 +18,55 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class Building implements GameObjects {
-    private int sizeX = -1;
-    private int sizeY = -1;
+    private static final double RECT_HEIGTH = 1.5;
+    private static final double RECT_WIDTH = 1.5;
+    private static final int INIT_X = 2;
+    private static final int SEPARATE = 3;
+    private static final int RECTS_NUMBER = 4;
+
+    private int sizeX = -1,sizeRectX;
+    private int sizeY = -1,sizeRectY;
     private int[] boxesOcuped;
     private Box[] boxes;
-    private int id,initBox;
+    private int id,initBox,rectHeigth;
     private Bitmap buildBitmap;
     private Context context;
     private BuildingState state = BuildingState.STOPPED;
     private boolean selected = false;
     private BuildingType buildingType;
+    private Rect[] rectActions;
+    private DrawActions drawActions;
+    private Paint p;
 
-    public Building( Box[] boxes, int id, int initBox, Context context,BuildingType buildingType) {
+
+    public Building(Box[] boxes, int id, int initBox, Context context, BuildingType buildingType, DrawActions drawActions) {
         this.boxes = boxes;
         this.id = id;
         this.initBox = initBox;
         this.context = context;
         this.buildingType = buildingType;
         makeObjectToDraw();
+        this.drawActions = drawActions;
+        this.sizeRectY = (int)(boxes[0].getSizeY()*RECT_HEIGTH);
+        this.sizeRectX = (int)(boxes[0].getSizeX()*RECT_WIDTH);
+        rectHeigth = drawActions.getInitY()+(((drawActions.getScreenHeight()-drawActions.getInitY()) - this.sizeRectY)/2);
+        makeRectActions();
+        this.p = new Paint();
+        p.setColor(Color.RED);
+        p.setStyle(Paint.Style.FILL_AND_STROKE);
     }
 
     @Override
     public void drawObject(Canvas c,int x,int y) {
         for (int i = 0; i < boxesOcuped.length; i++) {
             c.drawBitmap(buildBitmap,x,y,null);
+        }
+    }
+
+    @Override
+    public void drawInActionBar(Canvas c) {
+        for (int i = 0; i < rectActions.length; i++) {
+            c.drawRect(rectActions[i],p);
         }
     }
 
@@ -130,6 +158,14 @@ public class Building implements GameObjects {
                 res.getHeight(), newHeight, true);
     }
 
+    private void makeRectActions(){
+        rectActions = new Rect[RECTS_NUMBER];
+
+        for (int i = 0; i < rectActions.length; i++) {
+            rectActions[i] = new Rect(INIT_X*boxes[0].getSizeX()+((SEPARATE*boxes[0].getSizeX())*i),rectHeigth,INIT_X*boxes[0].getSizeX()+((SEPARATE*boxes[0].getSizeX())*i)+sizeRectX,rectHeigth+sizeRectY);
+        }
+    }
+
     public int[] getBoxesOcuped() {
         return boxesOcuped;
     }
@@ -161,4 +197,6 @@ public class Building implements GameObjects {
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
+
+
 }

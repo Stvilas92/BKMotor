@@ -2,6 +2,7 @@ package com.example.pruebasjuego.GameManger;
 
 import android.content.Context;
 
+import com.example.pruebasjuego.DrawObjects.DrawActions;
 import com.example.pruebasjuego.DrawObjects.DrawObjectSubtype;
 import com.example.pruebasjuego.DrawObjects.DrawObjectType;
 import com.example.pruebasjuego.DrawObjects.GameObjects;
@@ -29,12 +30,13 @@ public class Escenario {
     private ArrayList<GameObjects>objectsToDraw;
     private Context context;
     private static Box[] boxes;
+    private DrawActions drawActions;
 
-
-    public Escenario(Context context, Box[] boxes) {
+    public Escenario(Context context, Box[] boxes, DrawActions drawActions) {
         this.objectsposition = new ArrayList<>();
         this.context = context;
         this.boxes = boxes;
+        this.drawActions = drawActions;
         this.objectsToDraw = new ArrayList<>();
         this.indexesOccuped = new ArrayList<>();
     }
@@ -94,11 +96,11 @@ public class Escenario {
             if(flagContinue) {
                 if (x < PLAYER_INIT_X || y < PLAYER_INIT_Y) {
                     if (type == 0 ) {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.TREE));
+                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.TREE,drawActions));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
                     } else {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.ROCK));
+                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.ROCK,drawActions));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
                     }
@@ -112,9 +114,9 @@ public class Escenario {
     }
 
     public void generateMainBuilding(int initIndexX,int initIndexY){
-            objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(initIndexX,initIndexY),context, BuildingType.MAIN));
+            objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(initIndexX,initIndexY),context, BuildingType.MAIN,drawActions));
             indexID++;
-            objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(23,23),context, BuildingType.TOWER));
+            objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(23,23),context, BuildingType.TOWER,drawActions));
 //        setDrawObjectOnBox(getBoxByIndex(29,29),DrawObjectType.BUILDING,DrawObjectSubtype.TOWER);
 //        setDrawObjectOnBox(getBoxByIndex(29,30),DrawObjectType.BUILDING,DrawObjectSubtype.CATAPULT);
 //        setDrawObjectOnBox(getBoxByIndex(28,28),DrawObjectType.BUILDING,DrawObjectSubtype.WALL);

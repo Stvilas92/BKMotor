@@ -46,7 +46,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.surfaceHolder = getHolder();
         this.surfaceHolder.addCallback(this);
         this.context = context;
-        getInitBoxes();
         gameThread = new GameThread();
         setFocusable(true);
     }
@@ -54,19 +53,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+    }
+
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        this.w = width;
+        this.h = height;
+        getInitBoxes();
         gameThread.setFuncionando(true);
         if (gameThread.getState() == Thread.State.NEW) gameThread.start();
         if (gameThread.getState() == Thread.State.TERMINATED) {
             gameThread = new GameThread();
             gameThread.start();
         }
-    }
-
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-//        this.w = width;
-//        this.h = height;
     }
 
     @Override
@@ -138,7 +138,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if(box != null) {
             if(box.getGameObjects() != null) {
                 box.getGameObjects().setSelected(!box.getGameObjects().isSelected());
-
             }
         }
     }
@@ -147,7 +146,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void drawGame(Canvas canvas){
         drawVisibleBoxes(canvas);
         drawResources.draw(canvas);
-        drawActions.draw(canvas);
 
         try {
             Thread.sleep(50);
@@ -158,11 +156,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
 
     private void drawVisibleBoxes(Canvas c){
+        int indexBar = -1;
+        //La superficie debe dibujarse primero
         for (int i = 0; i < boxScreenManager.getBoxesToDraw().length; i++) {
             boxesToDraw[i].drawFloor(c);
         }
+
         for (int i = 0; i < boxScreenManager.getBoxesToDraw().length; i++) {
             boxesToDraw[i].drawBox(c);
+            if (boxesToDraw[i].getGameObjects() != null) {
+                if (boxesToDraw[i].getGameObjects().isSelected()) {
+                    indexBar = i;
+                }
+            }
 
 //            boxesOnGameChecker.draw(c,boxInit,ONSCREENINIT);
 
@@ -179,6 +185,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 //            c.drawText(boxesToDraw[i].xReference+":"+boxesToDraw[i].yReference,
 //                    boxesToDraw[i].getX(),boxesToDraw[i].getY()+boxesToDraw[i].getSizeY(),p);
         }
+
+        if(indexBar > 0) {
+            drawActions.draw(c);
+            boxesToDraw[indexBar].getGameObjects().drawInActionBar(c);
+        }
     }
 
     private int getInitBox(){
@@ -191,17 +202,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private void  getInitBoxes() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().
-                getMetrics(metrics);
-        w = metrics.widthPixels;
-        h = metrics.heightPixels;
         if(flagInit) {
             synchronized (surfaceHolder) {
                 screenDivider = new ScreenDivider(w - (w * SIZEGAME), w, h - (h * SIZEGAME), h, DIV, context);
                 boxes = screenDivider.getBoxes();
                 boxInit = getInitBox();
-                escenario = new Escenario(context, boxes);
+                drawResources = new DrawResources(10,20,30,boxes[boxInit].getSizeY(),boxes[boxInit].getSizeX(),boxes[boxInit].getSizeY(),w,context);
+                drawActions = new DrawActions(0,0,0,h-(boxes[boxInit].getSizeY()*2),boxes[boxInit].getSizeX(),boxes[boxInit].getSizeY(),w,h);
+                escenario = new Escenario(context, boxes,drawActions);
                 escenario.generateRandomScenario();
                 boxesOnGameChecker = new BoxesOnGameChecker(escenario);
             }
@@ -209,8 +217,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 boxScreenManager = new BoxScreenManager(ONSCREENINIT, escenario);
                 boxesToDraw = boxScreenManager.updateBoxesTodraw(boxInit);
                 flagInit = false;
-                drawResources = new DrawResources(10,20,30,boxesToDraw[0].getSizeY(),boxesToDraw[0].getSizeX(),boxesToDraw[0].getSizeY(),w,context);
-                drawActions = new DrawActions(0,0,0,h-(boxesToDraw[0].getSizeY()*2),boxesToDraw[0].getSizeX(),boxesToDraw[0].getSizeY(),w);
             }
         }
     }

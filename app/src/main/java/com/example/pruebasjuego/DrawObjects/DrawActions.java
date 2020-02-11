@@ -7,10 +7,10 @@ import android.graphics.Rect;
 
 public class DrawActions {
     private int actualWood,actualStone,actualFood;
-    private int initY,boxSizeX,boxSizeY,screenWidth;
+    private int initY,boxSizeX,boxSizeY,screenWidth,screenHeight;
     private Paint pBackgound;
 
-    public DrawActions(int actualWood, int actualStone, int actualFood, int initY, int boxSizeX, int boxSizeY,int screenWidth) {
+    public DrawActions(int actualWood, int actualStone, int actualFood, int initY, int boxSizeX, int boxSizeY,int screenWidth,int screenHeight) {
         this.actualWood = actualWood;
         this.actualStone = actualStone;
         this.actualFood = actualFood;
@@ -18,6 +18,7 @@ public class DrawActions {
         this.boxSizeX = boxSizeX;
         this.boxSizeY = boxSizeY;
         this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
         pBackgound = new Paint();
         pBackgound.setColor(Color.GRAY);
     }
@@ -73,5 +74,29 @@ public class DrawActions {
 
     public void setBoxSizeY(int boxSizeY) {
         this.boxSizeY = boxSizeY;
+    }
+
+    public int getScreenWidth() {
+        return screenWidth;
+    }
+
+    public int getScreenHeight() {
+        return screenHeight;
+    }
+
+    public void setScreenHeight(int screenHeight) {
+        this.screenHeight = screenHeight;
+    }
+
+    public void setScreenWidth(int screenWidth) {
+        this.screenWidth = screenWidth;
+    }
+
+    public Paint getpBackgound() {
+        return pBackgound;
+    }
+
+    public void setpBackgound(Paint pBackgound) {
+        this.pBackgound = pBackgound;
     }
 }

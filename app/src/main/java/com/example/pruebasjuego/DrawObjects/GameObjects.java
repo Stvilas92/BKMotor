@@ -11,4 +11,5 @@ public interface GameObjects {
     public int getSizeX();
     public int getSizeY();
     public void setSelected(boolean selected);
+    public void drawInActionBar(Canvas c);
 }
