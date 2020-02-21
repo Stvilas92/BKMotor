@@ -6,5 +6,6 @@ public enum BuildingState {
     CREATING_SOLDIER,
     ATTACKING,
     DEFENDING,
+    WALKING,
     STOPPED
 }

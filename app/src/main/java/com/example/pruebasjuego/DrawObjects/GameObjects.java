@@ -12,4 +12,6 @@ public interface GameObjects {
     public int getSizeY();
     public void setSelected(boolean selected);
     public void drawInActionBar(Canvas c);
+    public void onTouchActionBarObject(int x, int y);
+    public int onTouchWhenSelected(int boxIndex);
 }

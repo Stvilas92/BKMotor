@@ -1,7 +1,5 @@
 package com.example.pruebasjuego.Screen;
 
-import android.graphics.Bitmap;
-
 import com.example.pruebasjuego.GameManger.Escenario;
 
 public class BoxScreenManager {
@@ -48,7 +46,7 @@ public class BoxScreenManager {
                 //en los edificios se le pasa la casilla donde empiezan a dibujar
                 if(boxesTotal[boxInit+ indexRead].getDrawObjectType() != null && boxesTotal[boxInit+ indexRead].getDrawObjectSubtype() != null && boxesTotal[indexRead].isInteractable()) {
                     boxesToDraw[index].setDrawObjectTypeAndSubtype(boxesTotal[boxInit + indexRead].getDrawObjectType(), boxesTotal[boxInit + indexRead].getDrawObjectSubtype(),
-                            boxesTotal[boxInit + indexRead].getGameObjects());
+                            boxesTotal[boxInit + indexRead].getGameObject());
                 }else{
                     boxesToDraw[index].setDrawObjectTypeAndSubtype(null,null,null);
                 }
@@ -56,6 +54,8 @@ public class BoxScreenManager {
                 boxesToDraw[index].yReference = (boxesTotal[boxInit+ indexRead].getIndexY());
                 boxesToDraw[index].xReferenceCoord = (boxesTotal[boxInit+ indexRead].getX());
                 boxesToDraw[index].yReferenceCoord = (boxesTotal[boxInit+ indexRead].getIndexY());
+                boxesToDraw[index].setActualGameObjectIndexX(boxesTotal[boxInit+ indexRead].getActualGameObjectIndexX());
+                boxesToDraw[index].setActualGameObjectIndexY(boxesTotal[boxInit+ indexRead].getActualGameObjectIndexY());
                 indexRead++;
                 index++;
             }
@@ -63,10 +63,6 @@ public class BoxScreenManager {
         }
 
         return boxesToDraw;
-    }
-
-    public static void updateBoxesToDraw(){
-
     }
 
     public int getOnScreenBoxes() {
