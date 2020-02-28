@@ -61,7 +61,7 @@ public class Human implements GameObjects {
     private int actualLife = INIT_LIFE;
     private HumanState humanState = HumanState.STTOPED;
     private int boxDestiny = -1;
-    private int moveXIndex = 0, moveYIndex = 0;
+    private int moveXIndex = 0, moveYIndex = 0,movingDifferenceX,movingDifferenceY;
     private int walkingIndex = 0,actionIndex = 0,deadIndex = 0;
 
 
@@ -363,7 +363,7 @@ public class Human implements GameObjects {
         }
     }
 
-    public void moveHuman(HumanMovementType humanMovementType){
+    public boolean moveHuman(HumanMovementType humanMovementType){
         boolean flagMoveBox = false;
         int boxToMoveIndex = -1;
 
@@ -375,9 +375,10 @@ public class Human implements GameObjects {
                         boxes[actualBox].setDrawObjectTypeAndSubtype(null, null, null);
                         actualBox = newBoxIndex;
                         boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN,drawObjectSubtype,this);
-                        boxes[actualBox].setActualGameObjectIndexX(boxes[actualBox].getMovingYSize()-1);
+                        boxes[actualBox].setActualGameObjectIndexY(boxes[actualBox].getMovingYSize()-1);
                     }else{
-                        this.humanState = HumanState.STTOPED;
+                        return false;
+//                        this.humanState = HumanState.STTOPED;
                     }
 
                 }
@@ -393,9 +394,10 @@ public class Human implements GameObjects {
                         boxes[actualBox].setDrawObjectTypeAndSubtype(null, null, null);
                         actualBox = newBoxIndex;
                         boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN, drawObjectSubtype, this);
-                        boxes[actualBox].setActualGameObjectIndexX(0);
+                        boxes[actualBox].setActualGameObjectIndexY(0);
                     }else{
-                        this.humanState = HumanState.STTOPED;
+                        return false;
+//                        this.humanState = HumanState.STTOPED;;
                     }
                 }
                 else{
@@ -412,7 +414,8 @@ public class Human implements GameObjects {
                         boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN,drawObjectSubtype,this);
                         boxes[actualBox].setActualGameObjectIndexX(boxes[actualBox].getMovingXSize()-1);
                     }else{
-                        this.humanState = HumanState.STTOPED;
+                        return false;
+//                        this.humanState = HumanState.STTOPED;
                     }
                 }
                 else{
@@ -429,7 +432,8 @@ public class Human implements GameObjects {
                         boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN,drawObjectSubtype,this);
                         boxes[actualBox].setActualGameObjectIndexX(0);
                     }else{
-                        this.humanState = HumanState.STTOPED;
+                        return false;
+//                        this.humanState = HumanState.STTOPED;
                     }
                 }
                 else{
@@ -437,51 +441,112 @@ public class Human implements GameObjects {
                 }
                 break;
         }
+        return true;
     }
+
 
     private void setMovementDirection(){
         boolean condition1 = actualBox == boxDestiny && (boxes[actualBox].getActualGameObjectIndexX() != boxes[actualBox].getMiddleIndexX() || boxes[actualBox].getActualGameObjectIndexY() != 0);
         boolean condition2 = actualBox != boxDestiny  && boxDestiny >= 0;
 
         if(condition1 || condition2){
-            int differenceX = boxes[actualBox].getIndexX()-boxes[boxDestiny].getIndexX();
-            int differenceY = boxes[actualBox].getIndexY()-boxes[boxDestiny].getIndexY();
-
-            if(Math.abs(differenceX) == Math.abs(differenceY)) {
-                switch (humanOrientation){
-                    case EST:
-                        moveHuman(HumanMovementType.HORIZONTAL_RIGHT);
-                        break;
-
-                    case WEST:
-                        moveHuman(HumanMovementType.HORIZONTAL_LEFT);
-                        break;
-
-                    case NORTH:
-                        moveHuman(HumanMovementType.VERTICAL_UP);
-                        break;
-
-                    case SOUTH:
-                        moveHuman(HumanMovementType.VERTICAL_DOWN);
-                        break;
-                }
-            }else if(Math.abs(differenceX) > Math.abs(differenceY)){
-                if(differenceX >= 0){
-                    humanOrientation = HumanOrientation.WEST;
-                    moveHuman(HumanMovementType.HORIZONTAL_LEFT);
-                }else{
-                    humanOrientation = HumanOrientation.EST;
-                    moveHuman(HumanMovementType.HORIZONTAL_RIGHT);
-                }
+            movingDifferenceX = boxes[actualBox].getIndexX()-boxes[boxDestiny].getIndexX();
+            movingDifferenceY = boxes[actualBox].getIndexY()-boxes[boxDestiny].getIndexY();
+            int differenceAbs = Math.abs(movingDifferenceX) - Math.abs(movingDifferenceY);
+            String difference = "";
+            if(differenceAbs == 0){
+                difference = "0";
             }else{
-                if(differenceY <= 0){
-                    humanOrientation = HumanOrientation.SOUTH;
-                    moveHuman(HumanMovementType.VERTICAL_DOWN);
-                }else{
-                    humanOrientation = HumanOrientation.NORTH;
-                    moveHuman(HumanMovementType.VERTICAL_UP);
-                }
+                difference = differenceAbs > 0? "horizontal":"vertical";
             }
+
+            switch (difference) {
+                case "0":
+                    switch (humanOrientation) {
+                        case EST:
+                            moveHuman(HumanMovementType.HORIZONTAL_RIGHT);
+                            break;
+
+                        case WEST:
+                            moveHuman(HumanMovementType.HORIZONTAL_LEFT);
+                            break;
+
+                        case NORTH:
+                            moveHuman(HumanMovementType.VERTICAL_UP);
+                            break;
+
+                        case SOUTH:
+                            moveHuman(HumanMovementType.VERTICAL_DOWN);
+                            break;
+                    }
+                    break;
+
+                case "horizontal":
+                    if (movingDifferenceX >= 0) {
+                        humanOrientation = HumanOrientation.WEST;
+                        if (!moveHuman(HumanMovementType.HORIZONTAL_LEFT)) {
+                        continue vetical;
+                        }
+                    } else {
+                        humanOrientation = HumanOrientation.EST;
+                        if (moveHuman(HumanMovementType.HORIZONTAL_RIGHT)) {
+
+                        }
+                    }
+                    break;
+
+                case "vertical":
+                    vetical:
+                    if (movingDifferenceY <= 0) {
+                        humanOrientation = HumanOrientation.SOUTH;
+                        moveHuman(HumanMovementType.VERTICAL_DOWN);
+                    } else {
+                        humanOrientation = HumanOrientation.NORTH;
+                        moveHuman(HumanMovementType.VERTICAL_UP);
+                    }
+                    break;
+            }
+        }
+
+//            if(Math.abs(movingDifferenceX) == Math.abs(movingDifferenceY)) {
+//                switch (humanOrientation){
+//                    case EST:
+//                        moveHuman(HumanMovementType.HORIZONTAL_RIGHT);
+//                        break;
+//
+//                    case WEST:
+//                        moveHuman(HumanMovementType.HORIZONTAL_LEFT);
+//                        break;
+//
+//                    case NORTH:
+//                        moveHuman(HumanMovementType.VERTICAL_UP);
+//                        break;
+//
+//                    case SOUTH:
+//                        moveHuman(HumanMovementType.VERTICAL_DOWN);
+//                        break;
+//                }
+//            }else if(Math.abs(movingDifferenceX) > Math.abs(movingDifferenceY)){
+//                if(movingDifferenceX >= 0){
+//                    humanOrientation = HumanOrientation.WEST;
+//                    if(!moveHuman(HumanMovementType.HORIZONTAL_LEFT)){
+//
+//                    }
+//                }else{
+//                    humanOrientation = HumanOrientation.EST;
+//                    if(moveHuman(HumanMovementType.HORIZONTAL_RIGHT)){
+//
+//                    }
+//                }
+//            }else{
+//                if(movingDifferenceY <= 0){
+//                    humanOrientation = HumanOrientation.SOUTH;
+//                    moveHuman(HumanMovementType.VERTICAL_DOWN);
+//                }else{
+//                    humanOrientation = HumanOrientation.NORTH;
+//                    moveHuman(HumanMovementType.VERTICAL_UP);
+//                }
+//            }
         }else {
             this.humanState = HumanState.STTOPED;
         }
@@ -491,6 +556,10 @@ public class Human implements GameObjects {
     public int onTouchWhenSelected(int boxIndex) {
         this.humanState = HumanState.WALKING;
         this.boxDestiny = boxIndex;
+        return actualBox;
+    }
+
+    public int getActualBox() {
         return actualBox;
     }
 }
