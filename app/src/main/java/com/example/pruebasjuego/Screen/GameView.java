@@ -10,18 +10,22 @@ import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.example.pruebasjuego.DrawObjects.GameObject;
+import com.example.pruebasjuego.DrawObjects.OnTouchBarObjectResult;
+import com.example.pruebasjuego.DrawObjects.buildings.Building;
 import com.example.pruebasjuego.DrawObjects.gameBars.DrawActionsBar;
 import com.example.pruebasjuego.DrawObjects.gameBars.DrawResourcesBar;
 import com.example.pruebasjuego.DrawObjects.humans.Human;
 import com.example.pruebasjuego.DrawObjects.humans.HumanState;
 import com.example.pruebasjuego.GameManger.Escenario;
+import com.example.pruebasjuego.Utils.BitmapManager;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private ScaleGestureDetector mScaleGestureDetector;
-    private SurfaceHolder surfaceHolder; // Interfaz abstracta para manejar la superficie de dibujado
-    private Context context; // Contexto de la aplicación
-    private GameThread gameThread; // GameThread encargado de dibujar y actualizar la física
-    private boolean runnig = false; // Control del gameThread
+    private SurfaceHolder surfaceHolder;
+    private Context context;
+    private GameThread gameThread;
+    private boolean runnig = false;
 
     public static final int DIV = 32;
     public static final int SIZEGAME = 2;
@@ -39,6 +43,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Box[] boxes,boxesToDraw;
     private int boxInit,boxGameObjectSelected;
     private Escenario escenario;
+    private GameObject gamaeObjectSelected;
+    private BitmapManager bitmapManager;
 
     public GameView(Context context,ScaleGestureDetector mScaleGestureDetector) {
         super(context);
@@ -61,7 +67,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.w = width;
         this.h = height;
         getInitBoxes();
-        gameThread.setFuncionando(true);
+        gameThread.setRunning(true);
         if (gameThread.getState() == Thread.State.NEW) gameThread.start();
         if (gameThread.getState() == Thread.State.TERMINATED) {
             gameThread = new GameThread();
@@ -71,7 +77,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        gameThread.setFuncionando(false);
+        gameThread.setRunning(false);
         try {
             gameThread.join();
         } catch (InterruptedException e) {
@@ -128,34 +134,55 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 historicalX = 0;
                 historicalY = 0;
                 int boxTouchedIndex =getBoxBylocationForTouch((int)event.getX(),(int)event.getY());
-                Box box = boxes[boxTouchedIndex];
 
-                if(boxGameObjectSelected > 0 && boxes[boxGameObjectSelected].getGameObject() != null){
-                    boxes[boxGameObjectSelected].getGameObject().onTouchWhenSelected(boxTouchedIndex);
-                    if(boxes[boxGameObjectSelected].getGameObject().getClass() == Human.class && ((Human)boxes[boxGameObjectSelected].getGameObject()).getHumanState() == HumanState.WALKING)  {
-                        boxGameObjectSelected = boxTouchedIndex;
+                if( boxTouchedIndex >= 0) {
+                    Box box = boxes[boxTouchedIndex];
+
+
+                    if (!checkDrawAction((int) event.getX(), (int) event.getY())) {
+                        if (boxGameObjectSelected > 0 && boxes[boxGameObjectSelected].getGameObject() != null) {
+                            boxes[boxGameObjectSelected].getGameObject().onTouchWhenSelected(boxTouchedIndex);
+                            if (boxes[boxGameObjectSelected].getGameObject().getClass() == Human.class && ((Human) boxes[boxGameObjectSelected].getGameObject()).getHumanState() == HumanState.WALKING) {
+                                boxGameObjectSelected = boxTouchedIndex;
+                                gamaeObjectSelected = boxes[boxGameObjectSelected].getGameObject();
+                            }
+                            if (boxes[boxGameObjectSelected].getGameObject().getClass() == Human.class && ((Human) boxes[boxGameObjectSelected].getGameObject()).isSelectingMode()) {
+                                boxGameObjectSelected = boxTouchedIndex;
+                                gamaeObjectSelected = boxes[boxGameObjectSelected].getGameObject();
+                            }
+                        }
                     }
+                    checkSelected(box, (int) event.getX(), (int) event.getY());
                 }
-
-                checkSelected(box,(int)event.getX(),(int)event.getY());
                 break;
         }
         return true;
     }
 
-    public void checkSelected(Box box,int x,int y){
+    public boolean checkDrawAction(int x,int y){
         if(y >= drawActionsBar.getInitY()){
             if(boxGameObjectSelected > 0 && boxes[boxGameObjectSelected].getGameObject() != null){
-                boxes[boxGameObjectSelected].getGameObject().onTouchActionBarObject(x,y);
+                if(boxes[boxGameObjectSelected].getGameObject().onTouchActionBarObject(x,y) == OnTouchBarObjectResult.DROP_ALL_SELECTED){
+                    deselectedAll();
+                }
                 boxesToDraw = boxScreenManager.updateBoxesTodraw(boxInit);
+                return true;
             }
         }
-        if(box != null) {
+        return false;
+    }
+
+    public void checkSelected(Box box,int x,int y){
+        if(box != null && y < drawActionsBar.getInitY()) {
             if(box.getGameObject() != null) {
+                if(gamaeObjectSelected != null && gamaeObjectSelected.isSelectingMode()){
+                    return;
+                }
                 deselectedAll();
                 box.getGameObject().setSelected(!(box.getGameObject().isSelected()));
                 if(box.getGameObject().isSelected()){
                     boxGameObjectSelected =  getBoxByIndex(box.getIndexX(),box.getIndexY());
+                    gamaeObjectSelected = boxes[boxGameObjectSelected].getGameObject();
                 }
             }
         }
@@ -167,6 +194,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 boxes[i].getGameObject().setSelected(false);
             }
         }
+        boxGameObjectSelected = -1;
     }
 
 
@@ -183,6 +211,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
 
     private void drawVisibleBoxes(Canvas c){
+        if(((Building)escenario.getMainBuildingBox().getGameObject()).getActualLife() <= 0){
+            runnig = false;
+            return;
+        }
         int indexBar = -1;
         //La superficie debe dibujarse primero
         for (int i = 0; i < boxScreenManager.getBoxesToDraw().length; i++) {
@@ -195,10 +227,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             if (boxesToDraw[i].getGameObject() != null) {
                 if (boxesToDraw[i].getGameObject().isSelected()) {
                     indexBar = i;
-//                    if(boxesToDraw[i].getGameObject().getClass() == Human.class && ((Human)boxesToDraw[i].getGameObject()).getHumanState() == HumanState.WALKING) {
-////                        int indexActualBox = ((Human) boxesToDraw[i].getGameObject()).getActualBox();
-//                        boxGameObjectSelected = getBoxByIndex(boxesToDraw[i].getxReference(), boxesToDraw[i].getyReference());
-//                    }
                 }
             }
 
@@ -217,7 +245,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 //                    boxesToDraw[i].getX(),boxesToDraw[i].getY()+boxesToDraw[i].getSizeY(),p);
         }
 
-        if(indexBar > 0) {
+        if(indexBar > 0 &&  boxesToDraw[indexBar].getGameObject().isSelected()) {
             drawActionsBar.draw(c);
             boxesToDraw[indexBar].getGameObject().drawInActionBar(c);
         }
@@ -240,9 +268,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 boxes = screenDivider.getBoxes();
                 boxInit = getInitBox();
                 drawResourcesBar = new DrawResourcesBar(10,20,30,boxes[boxInit].getSizeY(),boxes[boxInit].getSizeX(),boxes[boxInit].getSizeY(),w,context);
-                drawActionsBar = new DrawActionsBar(h-(boxes[boxInit].getSizeY()*2),boxes[boxInit].getSizeX(),boxes[boxInit].getSizeY(),w,h);
-                escenario = new Escenario(context, boxes, drawActionsBar);
+                drawActionsBar = new DrawActionsBar(h-(boxes[boxInit].getSizeY()*2),boxes[boxInit].getSizeX(),boxes[boxInit].getSizeY(),w,h,getContext());
+                this.bitmapManager = new BitmapManager(boxes[0].getSizeX(),boxes[0].getSizeY(),context);
+                escenario = new Escenario(context, boxes, drawActionsBar,drawResourcesBar,bitmapManager);
                 escenario.generateRandomScenario();
+                escenario.getMainBuildingBox();
             }
             synchronized (surfaceHolder) {
                 boxScreenManager = new BoxScreenManager(ONSCREENINIT, escenario);
@@ -350,10 +380,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        void setFuncionando(boolean flag) {
+        void setRunning(boolean flag) {
             runnig = flag;
         }
-
     }
-
 }

@@ -7,10 +7,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+
+import com.example.pruebasjuego.DrawObjects.OnTouchBarObjectResult;
 import com.example.pruebasjuego.DrawObjects.gameBars.DrawActionsBar;
 import com.example.pruebasjuego.DrawObjects.DrawObjectSubtype;
 import com.example.pruebasjuego.DrawObjects.DrawObjectType;
-import com.example.pruebasjuego.DrawObjects.GameObjects;
+import com.example.pruebasjuego.DrawObjects.GameObject;
+import com.example.pruebasjuego.DrawObjects.gameBars.DrawResourcesBar;
 import com.example.pruebasjuego.DrawObjects.humans.Human;
 import com.example.pruebasjuego.DrawObjects.humans.HumanOrientation;
 import com.example.pruebasjuego.DrawObjects.humans.HumanType;
@@ -19,7 +22,7 @@ import com.example.pruebasjuego.Screen.Box;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class Building implements GameObjects {
+public class Building implements GameObject {
     private static final double RECT_HEIGTH = 1.5;
     private static final double RECT_WIDTH = 1.5;
     private static final int INIT_X = 2;
@@ -29,6 +32,9 @@ public class Building implements GameObjects {
     private static final int RECTS_NUMBER_WALL = 2;
     private static final int RECTS_NUMBER_CATAPULT = 2;
     private static final int INIT_LIFE = 100;
+    private static final int SOLDIER_FOOD_COST = 50;
+    private static final int CONSTRUCTOR_FOOD_COST = 100;
+    private static final int VILLAGER_FOOD_COST = 30;
 
     private int sizeX = -1,sizeRectX;
     private int sizeY = -1,sizeRectY;
@@ -41,6 +47,7 @@ public class Building implements GameObjects {
     private boolean selected = false;
     private DrawActionsBar drawActionsBar;
     private Paint p,pText;
+    private Canvas c;
 
     //Game variables
     private BuildingType buildingType;
@@ -48,14 +55,16 @@ public class Building implements GameObjects {
     private int actualLife = INIT_LIFE;
     private BuildingState buildingState = BuildingState.STOPPED;
     private Runnable[] actions;
+    private DrawResourcesBar drawResourcesBar;
+    private boolean selectingMode = false;
 
-
-    public Building(Box[] boxes, int id, int initBox, Context context, BuildingType buildingType, DrawActionsBar drawActionsBar) {
+    public Building(Box[] boxes, int id, int initBox, Context context, BuildingType buildingType, DrawActionsBar drawActionsBar, DrawResourcesBar drawResourcesBar) {
         this.boxes = boxes;
         this.id = id;
         this.initBox = initBox;
         this.context = context;
         this.buildingType = buildingType;
+        this.drawResourcesBar = drawResourcesBar;
         makeObjectToDraw();
         this.drawActionsBar = drawActionsBar;
         this.sizeRectY = (int)(boxes[0].getSizeY()*RECT_HEIGTH);
@@ -63,8 +72,8 @@ public class Building implements GameObjects {
         rectHeigth = drawActionsBar.getInitY()+(((drawActionsBar.getScreenHeight()- drawActionsBar.getInitY()) - this.sizeRectY)/2);
         makeRectActions();
         this.p = new Paint();
-        p.setColor(Color.RED);
-        p.setStyle(Paint.Style.STROKE);
+        p.setColor(Color.TRANSPARENT);
+        p.setStyle(Paint.Style.FILL_AND_STROKE);
 
         this.pText = new Paint();
         pText.setColor(Color.YELLOW);
@@ -74,16 +83,15 @@ public class Building implements GameObjects {
 
     @Override
     public void drawObject(Canvas c,int x,int y) {
+        this.c = c;
         c.drawBitmap(buildBitmap,x,y,null);
-//        for (int i = 0; i < boxesOcuped.length; i++) {
-
-//        }
     }
 
     @Override
     public void drawInActionBar(Canvas c) {
         for (int i = 0; i < rectActions.length; i++) {
             c.drawRect(rectActions[i],p);
+            c.drawBitmap(drawActionsBar.getBitmapButton(),rectActions[i].left,rectActions[i].top,null);
         }
 
         switch(buildingType){
@@ -136,12 +144,21 @@ public class Building implements GameObjects {
         }
     }
 
-    public void onTouchActionBarObject(int x, int y){
+    public OnTouchBarObjectResult onTouchActionBarObject(int x, int y){
         for (int i = 0; i < rectActions.length; i++) {
             if(rectActions[i].contains(x,y)){
-                actions[i].run();
+                c.drawBitmap(drawActionsBar.getBitmapButtonPressed(),rectActions[i].left,rectActions[i].top,null);
+                if(i == rectActions.length-1){
+                    this.selectingMode = false;
+                    this.selected = false;
+                    return OnTouchBarObjectResult.DROP_ALL_SELECTED;
+                }else {
+                    actions[i].run();
+                    return OnTouchBarObjectResult.NONE;
+                }
             }
         }
+        return OnTouchBarObjectResult.NONE;
     }
 
 
@@ -212,7 +229,7 @@ public class Building implements GameObjects {
                 actions = new Runnable[RECTS_NUMBER_BUILDING-2];
                 for (int i = 0; i < actions.length; i++) {
                     final int index = i;
-                   actions[i] = (() -> setBuildingState(BuildingState.values()[index]));
+                    actions[i] = (() -> setBuildingState(BuildingState.values()[index]));
                 }
                 break;
 
@@ -290,16 +307,25 @@ public class Building implements GameObjects {
             case DEFENDING:
                 break;
             case CREATING_SOLDIER:
-                Human soldier = new Human(boxes,1,initBox-1 ,context, HumanType.SOLDIER, drawActionsBar, HumanOrientation.SOUTH);
-                this.setBuildingState(BuildingState.STOPPED);
+                if(drawResourcesBar.getActualFood() >= SOLDIER_FOOD_COST) {
+                    Human soldier = new Human(boxes, 1, initBox - 1, context, HumanType.SOLDIER, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar);
+                    this.setBuildingState(BuildingState.STOPPED);
+                    drawResourcesBar.setActualFood(drawResourcesBar.getActualFood()-SOLDIER_FOOD_COST);
+                }
                 break;
             case CREATING_VILLAGER:
-                Human villager = new Human(boxes, 1,initBox-1,context, HumanType.VILLAGER, drawActionsBar, HumanOrientation.SOUTH);
-                this.setBuildingState(BuildingState.STOPPED);
+                if(drawResourcesBar.getActualFood() >= VILLAGER_FOOD_COST) {
+                    Human villager = new Human(boxes, 1, initBox - 1, context, HumanType.VILLAGER, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar);
+                    this.setBuildingState(BuildingState.STOPPED);
+                    drawResourcesBar.setActualFood(drawResourcesBar.getActualFood()-VILLAGER_FOOD_COST);
+                }
                 break;
             case CREATING_CONSTRUCOR:
-                Human constructor = new Human(boxes,1,initBox-1 ,context, HumanType.CONSTRUCTOR, drawActionsBar, HumanOrientation.SOUTH);
-                this.setBuildingState(BuildingState.STOPPED);
+                if(drawResourcesBar.getActualFood() >= CONSTRUCTOR_FOOD_COST) {
+                    Human constructor = new Human(boxes, 1, initBox - 1, context, HumanType.CONSTRUCTOR, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar);
+                    this.setBuildingState(BuildingState.STOPPED);
+                    drawResourcesBar.setActualFood(drawResourcesBar.getActualFood()-CONSTRUCTOR_FOOD_COST);
+                }
                 break;
         }
     }
@@ -307,5 +333,32 @@ public class Building implements GameObjects {
     @Override
     public int onTouchWhenSelected(int boxIndex) {
         return boxIndex;
+    }
+
+    @Override
+    public boolean isSelectingMode() {
+        return selectingMode;
+    }
+
+    @Override
+    public void setSelectingMode(boolean selectingMode) {
+        this.selectingMode =  selectingMode;
+
+    }
+
+    public int getActualLife() {
+        return actualLife;
+    }
+
+    public void setActualLife(int actualLife) {
+        this.actualLife = actualLife;
+    }
+
+    public BuildingType getBuildingType() {
+        return buildingType;
+    }
+
+    public void setBuildingType(BuildingType buildingType) {
+        this.buildingType = buildingType;
     }
 }

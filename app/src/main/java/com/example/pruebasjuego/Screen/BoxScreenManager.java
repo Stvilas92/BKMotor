@@ -22,15 +22,15 @@ public class BoxScreenManager {
             for (int j = 0; j < onScreenBoxes; j++) {
                 if(index == 0){
                     boxesToDraw[0] = new Box(0,0,0,0,boxesTotal[0].getSizeX(),boxesTotal[0].getSizeY(),boxesTotal[0].getContext(),
-                            null,null,true);
+                            null,null,true,boxesTotal[0].getFloor());
                 }
                 else if(i == onScreenBoxes || j == onScreenBoxes){
                     boxesToDraw[index] = new Box(i, j, initX + (boxesToDraw[0].getSizeX()*i), initY + (boxesToDraw[0].getSizeY()*j),
-                            boxesTotal[0].getSizeX(), boxesTotal[0].getSizeY(), boxesTotal[0].getContext(), null, null,false);
+                            boxesTotal[0].getSizeX(), boxesTotal[0].getSizeY(), boxesTotal[0].getContext(), null, null,false,boxesTotal[0].getFloor());
                 }
                 else {
                         boxesToDraw[index] = new Box(i, j, initX + (boxesToDraw[0].getSizeX()*i), initY + (boxesToDraw[0].getSizeY()*j),
-                        boxesTotal[0].getSizeX(), boxesTotal[0].getSizeY(), boxesTotal[0].getContext(), null, null,true);
+                        boxesTotal[0].getSizeX(), boxesTotal[0].getSizeY(), boxesTotal[0].getContext(), null, null,true,boxesTotal[0].getFloor());
                 }
                 index++;
             }
@@ -65,27 +65,9 @@ public class BoxScreenManager {
         return boxesToDraw;
     }
 
-    public int getOnScreenBoxes() {
-        return onScreenBoxes;
-    }
-
-    public void setOnScreenBoxes(int onScreenBoxes) {
-        this.onScreenBoxes = onScreenBoxes;
-    }
-
-    public Box[] getBoxesTotal() {
-        return boxesTotal;
-    }
-
-    public void setBoxesTotal(Box[] boxesTotal) {
-        this.boxesTotal = boxesTotal;
-    }
 
     public Box[] getBoxesToDraw() {
         return boxesToDraw;
     }
 
-    public void setBoxesToDraw(Box[] boxesToDraw) {
-        this.boxesToDraw = boxesToDraw;
-    }
 }

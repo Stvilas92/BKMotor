@@ -3,7 +3,7 @@ package com.example.pruebasjuego.DrawObjects;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-public interface GameObjects {
+public interface GameObject {
     public void drawObject(Canvas c,int x,int y);
     public int getObjectID();
     public Bitmap getBitmap();
@@ -12,6 +12,8 @@ public interface GameObjects {
     public int getSizeY();
     public void setSelected(boolean selected);
     public void drawInActionBar(Canvas c);
-    public void onTouchActionBarObject(int x, int y);
+    public OnTouchBarObjectResult onTouchActionBarObject(int x, int y);
     public int onTouchWhenSelected(int boxIndex);
+    public boolean isSelectingMode();
+    public void setSelectingMode(boolean selectingMode);
 }

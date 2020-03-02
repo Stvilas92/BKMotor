@@ -10,7 +10,7 @@ import android.graphics.Rect;
 
 import com.example.pruebasjuego.DrawObjects.DrawObjectSubtype;
 import com.example.pruebasjuego.DrawObjects.DrawObjectType;
-import com.example.pruebasjuego.DrawObjects.GameObjects;
+import com.example.pruebasjuego.DrawObjects.GameObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,14 +27,14 @@ public class Box {
     private Context context;
     private DrawObjectType drawObjectType;
     private DrawObjectSubtype drawObjectSubtype;
-    private GameObjects gameObject;
+    private GameObject gameObject;
     private int[] movingX,movingY;
     private int actualGameObjectIndexX,actualGameObjectIndexY ,middleIndexX;
     private boolean interactable;
     private Paint p=new Paint();
 
 
-    public Box(int indexX, int indexY, int x, int y, int sizeX, int sizeY, Context context, DrawObjectType drawObjectType, DrawObjectSubtype drawObjectSubtype, boolean interactable) {
+    public Box(int indexX, int indexY, int x, int y, int sizeX, int sizeY, Context context, DrawObjectType drawObjectType, DrawObjectSubtype drawObjectSubtype, boolean interactable , Bitmap surface) {
         this.x = x;
         p.setColor(Color.YELLOW);
         p.setStrokeWidth(1);
@@ -49,8 +49,7 @@ public class Box {
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.context  = context;
-        this.floor = getBitmapFromAssets("surface.png");
-        this.floor = Bitmap.createScaledBitmap(this.floor, this.getSizeX(), this.getSizeX(),false);
+        this.floor = surface;
         this.drawObjectType = drawObjectType;
         this.movingX = new int[MOVING_X_SIZE];
         this.movingY = new int[MOVING_Y_SIZE];
@@ -106,15 +105,15 @@ public class Box {
         return drawObjectSubtype;
     }
 
-    public void setDrawObjectTypeAndSubtype(DrawObjectType drawObjectType, DrawObjectSubtype drawObjectSubtype,GameObjects gameObjects) {
+    public void setDrawObjectTypeAndSubtype(DrawObjectType drawObjectType, DrawObjectSubtype drawObjectSubtype, GameObject gameObject) {
         this.drawObjectType = drawObjectType;
         this.drawObjectSubtype = drawObjectSubtype;
-        this.gameObject = gameObjects;
+        this.gameObject = gameObject;
         if(drawObjectType != null){
-            if(gameObjects == null) {
+            if(gameObject == null) {
                 this.object = null;
             }else{
-                this.object = gameObjects.getBitmap();
+                this.object = gameObject.getBitmap();
             }
         }
     }
@@ -223,11 +222,11 @@ public class Box {
         this.interactable = interactable;
     }
 
-    public GameObjects getGameObject() {
+    public GameObject getGameObject() {
         return gameObject;
     }
 
-    public void setGameObject(GameObjects gameObject) {
+    public void setGameObject(GameObject gameObject) {
         this.gameObject = gameObject;
     }
 

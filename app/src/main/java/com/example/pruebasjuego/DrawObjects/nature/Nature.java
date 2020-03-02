@@ -2,23 +2,21 @@ package com.example.pruebasjuego.DrawObjects.nature;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import com.example.pruebasjuego.DrawObjects.OnTouchBarObjectResult;
+import com.example.pruebasjuego.Utils.BitmapManager;
 import com.example.pruebasjuego.DrawObjects.gameBars.DrawActionsBar;
 import com.example.pruebasjuego.DrawObjects.DrawObjectSubtype;
 import com.example.pruebasjuego.DrawObjects.DrawObjectType;
-import com.example.pruebasjuego.DrawObjects.GameObjects;
+import com.example.pruebasjuego.DrawObjects.GameObject;
 import com.example.pruebasjuego.GameManger.Escenario;
 import com.example.pruebasjuego.Screen.Box;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-public class Nature implements GameObjects {
+public class Nature implements GameObject {
     private static final double RECT_HEIGTH = 1.5;
     private static final double RECT_WIDTH = 1;
     private static final int INIT_X = 2;
@@ -38,13 +36,15 @@ public class Nature implements GameObjects {
     private boolean selected = false;
     private Rect[] rectActions;
     private Paint p,pText;
+    private BitmapManager bitmapManager;
 
     //Game Data
     private NatureType natureType;
     private NatureState natureState = NatureState.STTOPED;
     int initResources,actualResources;
 
-    public Nature(Box[] boxes, int id, int initBox, Context context, NatureType natureType, DrawActionsBar drawActionsBar) {
+    public Nature(Box[] boxes, int id, int initBox, Context context, NatureType natureType, DrawActionsBar drawActionsBar,BitmapManager bitmapManager) {
+        this.bitmapManager = bitmapManager;
         this.boxes = boxes;
         this.id = id;
         this.initBox = initBox;
@@ -84,8 +84,8 @@ public class Nature implements GameObjects {
     }
 
     @Override
-    public void onTouchActionBarObject(int x, int y) {
-
+    public OnTouchBarObjectResult onTouchActionBarObject(int x, int y) {
+        return OnTouchBarObjectResult.NONE;
     }
 
     @Override
@@ -118,55 +118,32 @@ public class Nature implements GameObjects {
         }
     }
 
-    public Bitmap getBitmapFromAssets(String fichero) {
-        try
-        {
-            InputStream is= context.getAssets().open(fichero);
-            return BitmapFactory.decodeStream(is);
-        }
-        catch (IOException e) {
-            return null;
-        }
-    }
 
     private void makeObjectToDraw(){
         switch (natureType) {
             case ROCK:
-                this.sizeX = 1;
-                this.sizeY = 1;
-                this.natureBitmap = getBitmapFromAssets("Nature/rock.png");
-                this.natureBitmap = scaleByWidth(this.natureBitmap, this.boxes[0].getSizeY() * sizeY);
-                this.natureTypeBitmap = getBitmapFromAssets("Resources/stone.png");
-                this.natureTypeBitmap = scaleByWidth(this.natureTypeBitmap, this.boxes[0].getSizeY());
+                this.natureBitmap = bitmapManager.getNatureRock();
+                this.natureTypeBitmap =  bitmapManager.getNatureTypeRock();
                 getBoxesToDraw();
                 this.boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING, DrawObjectSubtype.MAIN_BUILDING,this);
                 this.initResources =  INIT_ROCK;
                 break;
 
             case FOOD:
-                this.sizeX = 1;
-                this.sizeY = 1;
-                this.natureBitmap = getBitmapFromAssets("Nature/food.png");
-                this.natureBitmap = scaleByWidth(this.natureBitmap, this.boxes[0].getSizeY() * sizeY);
-                this.natureTypeBitmap = getBitmapFromAssets("Resources/food.png");
-                this.natureTypeBitmap = scaleByWidth(this.natureTypeBitmap, this.boxes[0].getSizeY());
+                this.natureBitmap = bitmapManager.getNatureFood();
+                this.natureTypeBitmap =  bitmapManager.getNatureTypeFood();
                 getBoxesToDraw();
                 this.boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.TOWER,this);
                 this.initResources =  INIT_FOOD;
                 break;
 
             case WOOD:
-                this.sizeX = 1;
-                this.sizeY = 1;
-                this.natureBitmap = getBitmapFromAssets("Nature/tree.png");
-                this.natureBitmap = scaleByWidth(this.natureBitmap, this.boxes[0].getSizeY() * sizeY);
-                this.natureTypeBitmap = getBitmapFromAssets("Resources/wood.png");
-                this.natureTypeBitmap = scaleByWidth(this.natureTypeBitmap, this.boxes[0].getSizeY());
+                this.natureBitmap = bitmapManager.getNatureWood();
+                this.natureTypeBitmap =  bitmapManager.getNatureTypeWood();
                 getBoxesToDraw();
                 this.boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.WALL,this);
                 this.initResources =  INIT_WOOD;
                 break;
-
         }
         this.actualResources = this.initResources;
     }
@@ -177,12 +154,6 @@ public class Nature implements GameObjects {
         for (int i = 0; i < rectActions.length; i++) {
             rectActions[i] = new Rect(INIT_X*boxes[0].getSizeX()+((SEPARATE*boxes[0].getSizeX())*i),rectHeigth,INIT_X*boxes[0].getSizeX()+((SEPARATE*boxes[0].getSizeX())*i)+sizeRectX,rectHeigth+sizeRectY);
         }
-    }
-
-    public Bitmap scaleByWidth(Bitmap res, int newHeight) {
-        if (newHeight==res.getHeight()) return res;
-        return res.createScaledBitmap(res, (res.getWidth() * newHeight) /
-                res.getHeight(), newHeight, true);
     }
 
     public int[] getBoxesOcuped() {
@@ -220,4 +191,40 @@ public class Nature implements GameObjects {
     public int  onTouchWhenSelected(int boxIndex) {
         return boxIndex;
     }
+
+    @Override
+    public boolean isSelectingMode() {
+        return false;
+    }
+
+    @Override
+    public void setSelectingMode(boolean selectingMode) {
+
+    }
+
+    public int getActualResources() {
+        return actualResources;
+    }
+
+    public void setActualResources(int actualResources) {
+        this.actualResources = actualResources;
+    }
+
+    public int getInitResources() {
+        return initResources;
+    }
+
+    public void setInitResources(int initResources) {
+        this.initResources = initResources;
+    }
+
+    public NatureType getNatureType() {
+        return natureType;
+    }
+
+    public void setNatureType(NatureType natureType) {
+        this.natureType = natureType;
+    }
+
+
 }

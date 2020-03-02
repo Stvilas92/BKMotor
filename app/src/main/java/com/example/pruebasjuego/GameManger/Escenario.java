@@ -5,44 +5,46 @@ import android.content.Context;
 import com.example.pruebasjuego.DrawObjects.gameBars.DrawActionsBar;
 import com.example.pruebasjuego.DrawObjects.DrawObjectSubtype;
 import com.example.pruebasjuego.DrawObjects.DrawObjectType;
-import com.example.pruebasjuego.DrawObjects.GameObjects;
+import com.example.pruebasjuego.DrawObjects.GameObject;
+import com.example.pruebasjuego.DrawObjects.gameBars.DrawResourcesBar;
 import com.example.pruebasjuego.DrawObjects.nature.Nature;
 import com.example.pruebasjuego.DrawObjects.nature.NatureType;
 import com.example.pruebasjuego.DrawObjects.buildings.Building;
 import com.example.pruebasjuego.DrawObjects.buildings.BuildingType;
 import com.example.pruebasjuego.Screen.Box;
 import com.example.pruebasjuego.Screen.PointIndex;
+import com.example.pruebasjuego.Utils.BitmapManager;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Escenario {
-    private static final int OBJECTS_TOTAL = 100;
+    private static final int OBJECTS_TOTAL = 50;
     private static final int PLAYER_INIT_X = 20;
     private static final int PLAYER_INIT_Y = 20;
     private static final int MAIN_BUILDING_INIT_X = 25;
     private static final int MAIN_BUILDING_INIT_Y = 25;
 
     private int indexID = 0;
-
     private ArrayList<PointIndex>indexesOccuped;
     private ArrayList<Integer>objectsposition;
-    private ArrayList<GameObjects>objectsToDraw;
+    private ArrayList<GameObject>objectsToDraw;
     private Context context;
     private static Box[] boxes;
     private DrawActionsBar drawActionsBar;
+    private DrawResourcesBar drawResourcesBar;
+    private Box mainBuildingBox;
+    private BitmapManager bitmapManager;
 
-    public Escenario(Context context, Box[] boxes, DrawActionsBar drawActionsBar) {
+    public Escenario(Context context, Box[] boxes, DrawActionsBar drawActionsBar, DrawResourcesBar drawResourcesBar,BitmapManager bitmapManager) {
+        this.bitmapManager = bitmapManager;
         this.objectsposition = new ArrayList<>();
         this.context = context;
         this.boxes = boxes;
         this.drawActionsBar = drawActionsBar;
         this.objectsToDraw = new ArrayList<>();
         this.indexesOccuped = new ArrayList<>();
-    }
-
-    public void setScenario(){
-
+        this.drawResourcesBar = drawResourcesBar;
     }
 
     public void setDrawObjectOnBox(int boxIndex, DrawObjectType type, DrawObjectSubtype subtype) {
@@ -78,7 +80,7 @@ public class Escenario {
         while (indexesOccuped.size() < OBJECTS_TOTAL){
             int x = (int)(Math.random()*32);
             int y = (int)(Math.random()*32);
-            int type = (int)(Math.random()*2);
+            int type = (int)(Math.random()*3);
 
 
             for (int i = 0; i < indexesOccuped.size(); i++) {
@@ -96,11 +98,15 @@ public class Escenario {
             if(flagContinue) {
                 if (x < PLAYER_INIT_X || y < PLAYER_INIT_Y) {
                     if (type == 0 ) {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.WOOD, drawActionsBar));
+                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.WOOD, drawActionsBar,bitmapManager));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
-                    } else {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.ROCK, drawActionsBar));
+                    } else if(type == 1) {
+                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.ROCK, drawActionsBar,bitmapManager));
+                        indexID++;
+                        indexesOccuped.add(new PointIndex(x,y));
+                    }else {
+                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.FOOD, drawActionsBar,bitmapManager));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
                     }
@@ -114,9 +120,10 @@ public class Escenario {
     }
 
     public void generateMainBuilding(int initIndexX,int initIndexY){
-            objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(initIndexX,initIndexY),context, BuildingType.MAIN, drawActionsBar));
-            indexID++;
-            objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(23,23),context, BuildingType.TOWER, drawActionsBar));
+        mainBuildingBox = boxes[getBoxByIndex(initIndexX,initIndexY)];
+        objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(initIndexX,initIndexY),context, BuildingType.MAIN, drawActionsBar,drawResourcesBar));
+        indexID++;
+        objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(23,23),context, BuildingType.TOWER, drawActionsBar,drawResourcesBar));
     }
 
     public static int getBoxByIndex(int indexX,int indexY){
@@ -128,11 +135,11 @@ public class Escenario {
         return -1;
     }
 
-    public ArrayList<GameObjects> getObjectsToDraw() {
+    public ArrayList<GameObject> getObjectsToDraw() {
         return objectsToDraw;
     }
 
-    public GameObjects getObjectByIndex(int id){
+    public GameObject getObjectByIndex(int id){
         for (int i = 0; i < objectsToDraw.size(); i++) {
             if(objectsToDraw.get(i).getObjectID() == id){
                 return objectsToDraw.get(i);
@@ -144,5 +151,13 @@ public class Escenario {
 
     public Box[] getBoxes() {
         return boxes;
+    }
+
+    public Box getMainBuildingBox() {
+        return mainBuildingBox;
+    }
+
+    public BitmapManager getBitmapManager() {
+        return bitmapManager;
     }
 }
