@@ -15,6 +15,7 @@ import com.example.pruebasjuego.DrawObjects.DrawObjectType;
 import com.example.pruebasjuego.DrawObjects.GameObject;
 import com.example.pruebasjuego.GameManger.Escenario;
 import com.example.pruebasjuego.Screen.Box;
+import com.example.pruebasjuego.Utils.GameTools;
 
 public class Nature implements GameObject {
     private static final double RECT_HEIGTH = 1.5;
@@ -30,7 +31,7 @@ public class Nature implements GameObject {
     private int sizeY = -1;
     private int[] boxesOcuped;
     private Box[] boxes;
-    private int id,initBox,rectHeigth,sizeRectY,sizeRectX;
+    private int id, actualBox,rectHeigth,sizeRectY,sizeRectX;
     private Bitmap natureBitmap,natureTypeBitmap;
     private Context context;
     private boolean selected = false;
@@ -43,11 +44,11 @@ public class Nature implements GameObject {
     private NatureState natureState = NatureState.STTOPED;
     int initResources,actualResources;
 
-    public Nature(Box[] boxes, int id, int initBox, Context context, NatureType natureType, DrawActionsBar drawActionsBar,BitmapManager bitmapManager) {
+    public Nature(Box[] boxes, int id, int actualBox, Context context, NatureType natureType, DrawActionsBar drawActionsBar, BitmapManager bitmapManager) {
         this.bitmapManager = bitmapManager;
         this.boxes = boxes;
         this.id = id;
-        this.initBox = initBox;
+        this.actualBox = actualBox;
         this.context = context;
         this.natureType = natureType;
         this.sizeRectY = (int)(boxes[0].getSizeY()*RECT_HEIGTH);
@@ -56,7 +57,7 @@ public class Nature implements GameObject {
         makeObjectToDraw();
         makeRectActions();
         this.p = new Paint();
-        p.setColor(Color.RED);
+        p.setColor(Color.YELLOW);
         p.setStyle(Paint.Style.STROKE);
         this.pText = new Paint();
         pText.setColor(Color.YELLOW);
@@ -66,9 +67,7 @@ public class Nature implements GameObject {
 
     @Override
     public void drawObject(Canvas c, int x, int y) {
-        for (int i = 0; i < boxesOcuped.length; i++) {
             c.drawBitmap(natureBitmap,x,y,null);
-        }
     }
 
     @Override
@@ -109,9 +108,10 @@ public class Nature implements GameObject {
         for (int i = 0; i < sizeX; i++) {
             for (int j = 0; j < sizeY; j++) {
                 if(i == 0 && j == 0){
-                    boxesOcuped[index] = initBox;
+                    boxesOcuped[index] = actualBox;
                 }else{
-                    boxesOcuped[index] = Escenario.getBoxByIndex(boxes[initBox].getIndexX()+i,boxes[initBox].getIndexX()+j);
+                    //TODO: aqui tambien se llamaba desde escenario
+                    boxesOcuped[index] = GameTools.getBoxByIndex(boxes,boxes[actualBox].getIndexX()+i,boxes[actualBox].getIndexX()+j);
                 }
                 index++;
             }
@@ -125,7 +125,7 @@ public class Nature implements GameObject {
                 this.natureBitmap = bitmapManager.getNatureRock();
                 this.natureTypeBitmap =  bitmapManager.getNatureTypeRock();
                 getBoxesToDraw();
-                this.boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING, DrawObjectSubtype.MAIN_BUILDING,this);
+                this.boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING, DrawObjectSubtype.MAIN_BUILDING,this);
                 this.initResources =  INIT_ROCK;
                 break;
 
@@ -133,7 +133,7 @@ public class Nature implements GameObject {
                 this.natureBitmap = bitmapManager.getNatureFood();
                 this.natureTypeBitmap =  bitmapManager.getNatureTypeFood();
                 getBoxesToDraw();
-                this.boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.TOWER,this);
+                this.boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.TOWER,this);
                 this.initResources =  INIT_FOOD;
                 break;
 
@@ -141,7 +141,7 @@ public class Nature implements GameObject {
                 this.natureBitmap = bitmapManager.getNatureWood();
                 this.natureTypeBitmap =  bitmapManager.getNatureTypeWood();
                 getBoxesToDraw();
-                this.boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.WALL,this);
+                this.boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.WALL,this);
                 this.initResources =  INIT_WOOD;
                 break;
         }
@@ -202,12 +202,23 @@ public class Nature implements GameObject {
 
     }
 
+    @Override
+    public void onTouchObject(boolean selectingMode, int x,int y,int boxSelected) {
+        if(!isSelected() && !selectingMode){
+            GameTools.deselectedAll(boxes);
+            selected = true;
+        }
+    }
+
     public int getActualResources() {
         return actualResources;
     }
 
     public void setActualResources(int actualResources) {
         this.actualResources = actualResources;
+        if(this.actualResources <= 0){
+            boxes[actualBox].setDrawObjectTypeAndSubtype(null,null,null);
+        }
     }
 
     public int getInitResources() {

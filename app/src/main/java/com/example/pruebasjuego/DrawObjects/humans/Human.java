@@ -18,6 +18,7 @@ import com.example.pruebasjuego.DrawObjects.GameObject;
 import com.example.pruebasjuego.DrawObjects.gameBars.DrawResourcesBar;
 import com.example.pruebasjuego.DrawObjects.nature.Nature;
 import com.example.pruebasjuego.Screen.Box;
+import com.example.pruebasjuego.Utils.GameTools;
 
 import java.util.HashMap;
 
@@ -50,7 +51,7 @@ public class Human implements GameObject {
     private int[] boxesOcuped;
     private Box[] boxes;
     private int id, actualBox,rectHeigth;
-    private Bitmap humanBitmap,bitmapVillager,bitmapConstructor,bitmapSoldier,exitBitmap,actionBitmap;
+    private Bitmap humanBitmap,bitmapVillager,bitmapConstructor,bitmapSoldier,exitBitmap,actionBitmap,bitmapEnemy;
     private Bitmap[] humanStopped;
     private HashMap <HumanOrientation,Bitmap[]>humanWalking,humanAction,humanDead;
     private Context context;
@@ -74,9 +75,11 @@ public class Human implements GameObject {
     private boolean flagActionEnd = false;
     private boolean selecttingMode = false;
     private GameObject objectObjetive;
+    private BitmapManager bitmapManager;
 
 
-    public Human(Box[] boxes, int id, int actualBox, Context context, HumanType humanType, DrawActionsBar drawActionsBar, HumanOrientation humanOrientation, DrawResourcesBar drawResourcesBar) {
+    public Human(Box[] boxes, int id, int actualBox, Context context, HumanType humanType, DrawActionsBar drawActionsBar, HumanOrientation humanOrientation, DrawResourcesBar drawResourcesBar,BitmapManager bitmapManager) {
+        this.bitmapManager = bitmapManager;
         this.boxes = boxes;
         this.drawResourcesBar = drawResourcesBar;
         this.humanOrientation = humanOrientation;
@@ -97,6 +100,7 @@ public class Human implements GameObject {
         pText.setColor(Color.YELLOW);
         pText.setStyle(Paint.Style.STROKE);
         pText.setTextSize(boxes[0].getSizeY()/2);
+        boxes[actualBox].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN,drawObjectSubtype,this);
     }
 
     /**
@@ -183,6 +187,10 @@ public class Human implements GameObject {
      */
     @Override
     public OnTouchBarObjectResult onTouchActionBarObject(int x, int y) {
+        if(humanType == HumanType.ENEMY){
+            return OnTouchBarObjectResult.NONE;
+        }
+
         for (int i = 0; i < rectActions.length; i++) {
             if(rectActions[i].contains(x,y)){
                 c.drawBitmap(drawActionsBar.getBitmapButtonPressed(),rectActions[i].left,rectActions[i].top,null);
@@ -244,6 +252,12 @@ public class Human implements GameObject {
                 createHuman(actualBox,HumanType.CONSTRUCTOR);
                 drawObjectSubtype = DrawObjectSubtype.CONSTRUCTOR;
                 break;
+
+            case ENEMY:
+                this.humanBitmap = bitmapEnemy;
+                createHuman(actualBox,HumanType.ENEMY);
+                drawObjectSubtype = DrawObjectSubtype.ENEMY;
+                break;
         }
     }
 
@@ -255,9 +269,15 @@ public class Human implements GameObject {
         rectActions = new Rect[RECTS_NUMBER_HUMAN];
         actions = new Runnable[RECTS_NUMBER_HUMAN];
 
-        actions[0] = (() -> {selecttingMode = true;});
-        actions[1] = (() -> {return;});
-        actions[2] = (() -> setSelected(false));
+        if(humanType != HumanType.ENEMY) {
+            actions[0] = (() -> {
+                setSelecttingMode(true);
+            });
+            actions[1] = (() -> {
+                return;
+            });
+            actions[2] = (() -> setSelected(false));
+        }
         for (int i = 0; i < rectActions.length; i++) {
             rectActions[i] = new Rect(INIT_X*boxes[0].getSizeX()+((SEPARATE*boxes[0].getSizeX())*i),rectHeigth,INIT_X*boxes[0].getSizeX()+((SEPARATE*boxes[0].getSizeX())*i)+sizeRectX,rectHeigth+sizeRectY);
         }
@@ -306,43 +326,27 @@ public class Human implements GameObject {
     public void setUnitsBitmaps(){
         switch (this.humanType) {
             case SOLDIER:
-                this.bitmapSoldier = BitmapManager.getBitmapFromAssets("Units/Soldier/Walking/stopped0000.png",context);
-                this.bitmapSoldier = BitmapManager.scaleByHeight(this.bitmapSoldier, this.boxes[0].getSizeY() * sizeY);
-                this.actionBitmap = BitmapManager.getBitmapFromAssets("BarIcons/sword.png",context);
-                this.actionBitmap = BitmapManager.scaleByHeight(this.actionBitmap, this.boxes[0].getSizeY() * sizeY);
+                this.bitmapSoldier = bitmapManager.getBitmapSoldier();
+                this.actionBitmap = bitmapManager.getBitmapActionSword();
                 break;
 
             case VILLAGER:
-                this.bitmapVillager = BitmapManager.getBitmapFromAssets("Units/Villager/Walking/stopped0000.png",context);
-                this.bitmapVillager = BitmapManager.scaleByHeight(this.bitmapVillager, this.boxes[0].getSizeY() * sizeY);
-                this.actionBitmap = BitmapManager.getBitmapFromAssets("BarIcons/hand.png",context);
-                this.actionBitmap = BitmapManager.scaleByHeight(this.actionBitmap, this.boxes[0].getSizeY() * sizeY);
+                this.bitmapVillager = bitmapManager.getBitmapVillager();
+                this.actionBitmap = bitmapManager.getBitmapActionHandWhite();
                 break;
 
             case CONSTRUCTOR:
-                this.bitmapConstructor = BitmapManager.getBitmapFromAssets("Units/Constructor/Walking/stopped0000.png",context);
-                this.bitmapConstructor = BitmapManager.scaleByHeight(this.bitmapConstructor, this.boxes[0].getSizeY() * sizeY);
-                this.actionBitmap = BitmapManager.getBitmapFromAssets("BarIcons/hand.png",context);
-                this.actionBitmap = BitmapManager.scaleByHeight(this.actionBitmap, this.boxes[0].getSizeY() * sizeY);
+                this.bitmapConstructor = bitmapManager.getBitmapConstructor();
+                this.actionBitmap = bitmapManager.getBitmapActionHandWhite();
+                break;
+
+            case ENEMY:
+                this.bitmapEnemy = bitmapManager.getBitmapSoldier();
+                this.actionBitmap = bitmapManager.getBitmapActionSword();
                 break;
         }
         this.exitBitmap = BitmapManager.getBitmapFromAssets("BarIcons/red_boxCross.png",context);
         this.exitBitmap = BitmapManager.scaleByHeight(this.exitBitmap, this.boxes[0].getSizeY() * sizeY);
-    }
-
-    /**
-     * Get a index of the box witch contains indexX and indexY
-     * @param indexX index of X of the box
-     * @param indexY index of Y of the box
-     * @return box witch contains indexX and indexY
-     */
-    private int getBoxByIndex(int indexX,int indexY){
-        for (int i = indexX*indexY; i < boxes.length; i++) {
-            if(boxes[i].getIndexX() == indexX && boxes[i].getIndexY() == indexY){
-                return i;
-            }
-        }
-        return -1;
     }
 
     /**
@@ -352,70 +356,32 @@ public class Human implements GameObject {
      * @param humanType HumanType using to set DrawObjectType and Subtype in the box
      */
     private void createHuman(int box,HumanType humanType){
-        String unitPath = "";
-        String unitAction = "";
-        int sizeWalking= 0,sizeAction = 0, sizeDead = 0;
         switch (humanType) {
             case VILLAGER:
-                unitPath = "Villager";
-                unitAction = "laydown";
-                boxes[box].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN, DrawObjectSubtype.VILLAGER, this);
-                sizeWalking = SIZE_WALKING_VILLAGER;
-                sizeAction = SIZE_ACTION_VILLAGER;
-                sizeDead = SIZE_DEAD_VILLAGER;
+                humanWalking = bitmapManager.getVillagerWalking();
+                humanAction  = bitmapManager.getVillagerAction();
+                humanDead = new HashMap<HumanOrientation,Bitmap[]>();
                 break;
 
             case CONSTRUCTOR:
-                unitPath = "Constructor";
-                unitAction = "nailing endless";
-                boxes[box].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN, DrawObjectSubtype.CONSTRUCTOR, this);
-                sizeWalking = SIZE_WALKING_CONSTRUCTOR;
-                sizeAction = SIZE_ACTION_CONSTRUCTOR;
-                sizeDead = SIZE_DEAD_CONSTRUCTOR;
+                humanWalking = bitmapManager.getConstructorWalking();
+                humanAction  = bitmapManager.getConstructorAction();
+                humanDead = new HashMap<HumanOrientation,Bitmap[]>();
                 break;
 
             case SOLDIER:
-                unitPath = "Soldier";
-                unitAction = "attack";
-                boxes[box].setDrawObjectTypeAndSubtype(DrawObjectType.HUMAN, DrawObjectSubtype.SOLDIER, this);
-                sizeWalking = SIZE_WALKING_SOLDIER;
-                sizeAction = SIZE_ACTION_SOLDIER;
-                sizeDead = SIZE_DEAD_SOLDIER;
+                humanWalking = bitmapManager.getSoldierWalking();
+                humanAction  = bitmapManager.getSoldierAction();
+                humanDead = bitmapManager.getSoldierDead();
+                break;
+
+            case ENEMY:
+                humanWalking = bitmapManager.getSoldierWalking();
+                humanAction  = bitmapManager.getSoldierAction();
+                humanDead = bitmapManager.getSoldierDead();
                 break;
         }
 
-        humanWalking = new HashMap<HumanOrientation,Bitmap[]>();
-        humanAction  = new HashMap<HumanOrientation,Bitmap[]>();
-        humanDead = new HashMap<HumanOrientation,Bitmap[]>();
-
-        for (int i = 0; i < HumanOrientation.values().length ; i++) {
-            Bitmap[] bitmapAux = new Bitmap[sizeWalking];
-            for (int j = 0; j < sizeWalking; j++) {
-                bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/"+unitPath+"/Walking/walking "+HumanOrientation.values()[i].toString().substring(0,1).toLowerCase()+"000"+j+".png",context);
-                bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], this.boxes[0].getSizeY() * sizeY);
-            }
-            humanWalking.put(HumanOrientation.values()[i],bitmapAux);
-        }
-
-        for (int i = 0; i < HumanOrientation.values().length ; i++) {
-            Bitmap[] bitmapAux = new Bitmap[sizeAction];
-            for (int j = 0; j < sizeAction; j++) {
-                bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/"+unitPath+"/Action/"+unitAction+" "+HumanOrientation.values()[i].toString().substring(0,1).toLowerCase()+"000"+j+".png",context);
-                bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], this.boxes[0].getSizeY() * sizeY);
-            }
-            humanAction.put(HumanOrientation.values()[i],bitmapAux);
-        }
-
-        if ( humanType == HumanType.SOLDIER) {
-            for (int i = 0; i < HumanOrientation.values().length; i++) {
-                Bitmap[] bitmapAux = new Bitmap[sizeDead];
-                for (int j = 0; j < sizeDead; j++) {
-                    bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/" + unitPath + "/Dead/tipping over " + HumanOrientation.values()[i].toString().substring(0, 1).toLowerCase() + "000" + j + ".png",context);
-                    bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], this.boxes[0].getSizeY() * sizeY);
-                }
-                humanDead.put(HumanOrientation.values()[i], bitmapAux);
-            }
-        }
     }
 
     /**
@@ -428,9 +394,9 @@ public class Human implements GameObject {
         if(indexX >  boxes[actualBox].getMiddleIndexX()){
             boxes[actualBox].setActualGameObjectIndexX(boxes[actualBox].getActualGameObjectIndexX()-1);
         }else if( indexY != 0){
-            boxes[actualBox].setActualGameObjectIndexX(boxes[actualBox].getActualGameObjectIndexX()+1);
-        }else if( indexY != 0){
             boxes[actualBox].setActualGameObjectIndexY(boxes[actualBox].getActualGameObjectIndexY()-1);
+        }else{
+            boxDestiny = -1;
         }
     }
 
@@ -444,7 +410,7 @@ public class Human implements GameObject {
         switch (humanMovementType){
             case VERTICAL_UP:
                 if(boxes[actualBox].getActualGameObjectIndexY() == 0){
-                    int newBoxIndex = getBoxByIndex(boxes[actualBox].getIndexX(), boxes[actualBox].getIndexY() - 1);
+                    int newBoxIndex = GameTools.getBoxByIndex(boxes,boxes[actualBox].getIndexX(), boxes[actualBox].getIndexY() - 1);
                     if(boxes[newBoxIndex].getGameObject() == null){
                         boxes[actualBox].setDrawObjectTypeAndSubtype(null, null, null);
                         actualBox = newBoxIndex;
@@ -461,7 +427,7 @@ public class Human implements GameObject {
 
             case VERTICAL_DOWN:
                 if(boxes[actualBox].getActualGameObjectIndexY() == boxes[actualBox].getMovingYSize()-1){
-                    int newBoxIndex = getBoxByIndex(boxes[actualBox].getIndexX(), boxes[actualBox].getIndexY() + 1);
+                    int newBoxIndex = GameTools.getBoxByIndex(boxes,boxes[actualBox].getIndexX(), boxes[actualBox].getIndexY() + 1);
                     if(boxes[newBoxIndex].getGameObject() == null) {
                         boxes[actualBox].setDrawObjectTypeAndSubtype(null, null, null);
                         actualBox = newBoxIndex;
@@ -478,7 +444,7 @@ public class Human implements GameObject {
 
             case HORIZONTAL_LEFT:
                 if(boxes[actualBox].getActualGameObjectIndexX() == 0){
-                    int newBoxIndex = getBoxByIndex(boxes[actualBox].getIndexX()-1,boxes[actualBox].getIndexY());
+                    int newBoxIndex = GameTools.getBoxByIndex(boxes,boxes[actualBox].getIndexX()-1,boxes[actualBox].getIndexY());
                     if(boxes[newBoxIndex].getGameObject() == null){
                         boxes[actualBox].setDrawObjectTypeAndSubtype(null, null, null);
                         actualBox = newBoxIndex;
@@ -495,7 +461,7 @@ public class Human implements GameObject {
 
             case HORIZONTAL_RIGHT:
                 if(boxes[actualBox].getActualGameObjectIndexX() == boxes[actualBox].getMovingXSize()-1){
-                    int newBoxIndex = getBoxByIndex(boxes[actualBox].getIndexX()+1,boxes[actualBox].getIndexY());
+                    int newBoxIndex = GameTools.getBoxByIndex(boxes,boxes[actualBox].getIndexX()+1,boxes[actualBox].getIndexY());
                     if(boxes[newBoxIndex].getGameObject() == null){
                         boxes[actualBox].setDrawObjectTypeAndSubtype(null, null, null);
                         actualBox = newBoxIndex;
@@ -530,6 +496,7 @@ public class Human implements GameObject {
             movingDifferenceY = boxes[actualBox].getIndexY()-boxes[boxDestiny].getIndexY();
             int differenceAbs = Math.abs(movingDifferenceX) - Math.abs(movingDifferenceY);
             String difference = "";
+
             if(differenceAbs == 0){
                 difference = "0";
             }else{
@@ -578,11 +545,10 @@ public class Human implements GameObject {
                     }
                     break;
             }
-        }
-        else {
+        }else {
             if( this.humanState == HumanState.ONACTION){
                 boxDestiny = -1;
-            }else{
+            }else if(this.humanState == HumanState.WALKING){
                 this.humanState = HumanState.STTOPED;
                 boxDestiny = -1;
             }
@@ -645,6 +611,28 @@ public class Human implements GameObject {
         this.selecttingMode = selectingMode;
     }
 
+    @Override
+    public void onTouchObject(boolean selecttingMode, int x,int y,int boxSelected) {
+        if(!this.selected){
+            if(!selecttingMode){
+                GameTools.deselectedAll(boxes);
+                this.setSelected(true);
+            }
+        }else{
+            if(y >= drawActionsBar.getInitY()){
+                onTouchActionBarObject(x,y);
+            }else if(selecttingMode) {
+                objectObjetive = boxes[boxSelected].getGameObject();
+                boxDestiny = boxSelected -1;
+                humanState = HumanState.ONACTION;
+                setSelectingMode(false);
+            }else{
+                boxDestiny = boxSelected;
+                humanState = HumanState.WALKING;
+            }
+        }
+    }
+
     /**
      *  Get the actual box of the human.
      * @return actual box of the human.
@@ -679,7 +667,7 @@ public class Human implements GameObject {
     public void doAction(GameObject gameObject){
         switch (humanType){
             case CONSTRUCTOR:
-                if(gameObject.getClass().equals(Building.class)){
+                if(gameObject != null && gameObject.getClass().equals(Building.class)){
                     if( ((Building)gameObject).getActualLife() != 100) {
                         switch (((Building) gameObject).getBuildingType()){
                             case MAIN:
@@ -699,27 +687,28 @@ public class Human implements GameObject {
                 }else{
                     int indexX = boxes[actualBox].getIndexX();
                     int indexY = boxes[actualBox].getIndexY();
-                    if(boxes[getBoxByIndex(indexX-1,indexY)].getGameObject() == null){
-                        boxes[getBoxByIndex(indexX-1,indexY)].
+                    if(boxes[GameTools.getBoxByIndex(boxes,indexX-1,indexY)].getGameObject() == null){
+                        boxes[GameTools.getBoxByIndex(boxes,indexX-1,indexY)].
                                 setDrawObjectTypeAndSubtype(DrawObjectType.NATURE,DrawObjectSubtype.TOWER,
-                                        new Building(boxes,0,getBoxByIndex(indexX-1,indexY),context, BuildingType.TOWER,
-                                                drawActionsBar,drawResourcesBar));
-                    }else if(boxes[getBoxByIndex(indexX+1,indexY)].getGameObject() == null){
-                        boxes[getBoxByIndex(indexX+1,indexY)].
+                                        new Building(boxes,0,GameTools.getBoxByIndex(boxes,indexX-1,indexY),context, BuildingType.TOWER,
+                                                drawActionsBar,drawResourcesBar,bitmapManager));
+                    }else if(boxes[GameTools.getBoxByIndex(boxes,indexX+1,indexY)].getGameObject() == null){
+                        boxes[GameTools.getBoxByIndex(boxes,indexX+1,indexY)].
                                 setDrawObjectTypeAndSubtype(DrawObjectType.NATURE,DrawObjectSubtype.TOWER,
-                                        new Building(boxes,0,getBoxByIndex(indexX+1,indexY),context, BuildingType.TOWER,
-                                                drawActionsBar,drawResourcesBar));
-                    }else if(boxes[getBoxByIndex(indexX,indexY-1)].getGameObject() == null){
-                        boxes[getBoxByIndex(indexX,indexY-1)].
+                                        new Building(boxes,0,GameTools.getBoxByIndex(boxes,indexX+1,indexY),context, BuildingType.TOWER,
+                                                drawActionsBar,drawResourcesBar,bitmapManager));
+                    }else if(boxes[GameTools.getBoxByIndex(boxes,indexX,indexY-1)].getGameObject() == null){
+                        boxes[GameTools.getBoxByIndex(boxes,indexX,indexY-1)].
                                 setDrawObjectTypeAndSubtype(DrawObjectType.NATURE,DrawObjectSubtype.TOWER,
-                                        new Building(boxes,0,getBoxByIndex(indexX,indexY-1),context, BuildingType.TOWER,
-                                                drawActionsBar,drawResourcesBar));
-                    }else if(boxes[getBoxByIndex(indexX,indexY+1)].getGameObject() == null){
-                        boxes[getBoxByIndex(indexX-1,indexY+1)].
+                                        new Building(boxes,0,GameTools.getBoxByIndex(boxes,indexX,indexY-1),context, BuildingType.TOWER,
+                                                drawActionsBar,drawResourcesBar,bitmapManager));
+                    }else if(boxes[GameTools.getBoxByIndex(boxes,indexX,indexY+1)].getGameObject() == null){
+                        boxes[GameTools.getBoxByIndex(boxes,indexX-1,indexY+1)].
                                 setDrawObjectTypeAndSubtype(DrawObjectType.NATURE,DrawObjectSubtype.TOWER,
-                                        new Building(boxes,0,getBoxByIndex(indexX,indexY+1),context, BuildingType.TOWER,
-                                                drawActionsBar,drawResourcesBar));
+                                        new Building(boxes,0,GameTools.getBoxByIndex(boxes,indexX,indexY+1),context, BuildingType.TOWER,
+                                                drawActionsBar,drawResourcesBar,bitmapManager));
                     }
+                    flagActionEnd = true;
                 }
                 break;
 
@@ -747,13 +736,53 @@ public class Human implements GameObject {
                 break;
 
             case SOLDIER:
-                if(gameObject.getClass().equals(Enemy.class)){
-                    ((Enemy) gameObject).setActualLife(((Enemy) gameObject).getActualLife() + ATACK);
-                    if(((Enemy) gameObject).getActualLife() <= 0) {
+                if(gameObject.getClass().equals(Human.class) && ((Human) gameObject).getHumanType() == HumanType.ENEMY){
+                    ((Human) gameObject).setActualLife(((Human) gameObject).getActualLife() + ATACK);
+                    if(((Human) gameObject).getActualLife() <= 0) {
                         flagActionEnd = true;
                     }
                 }
                 break;
+
+            case ENEMY:
+                if(gameObject.getClass().equals(Building.class) && ((Building) gameObject).getBuildingType() == BuildingType.MAIN){
+                    ((Building) gameObject).setActualLife(((Building) gameObject).getActualLife() - ATACK);
+                    if(((Building) gameObject).getActualLife() <= 0) {
+                        flagActionEnd = true;
+                    }
+                }
+                break;
+        }
+    }
+
+    /**
+     * Get the type of human
+     * @return type of human
+     */
+    public HumanType getHumanType() {
+        return humanType;
+    }
+
+    public boolean isSelecttingMode() {
+        return selecttingMode;
+    }
+
+    public void setSelecttingMode(boolean selecttingMode) {
+        this.selecttingMode = selecttingMode;
+        if(selecttingMode) {
+            actionBitmap = bitmapManager.getBitmapActionHandYellow();
+        }else{
+            actionBitmap = bitmapManager.getBitmapActionHandWhite();
+        }
+
+    }
+
+    public void setBoxDestiny(int boxDestiny) {
+        if(boxes[boxDestiny].getGameObject() == null) {
+            this.boxDestiny = boxDestiny;
+        }else{
+            this.boxDestiny = boxDestiny -1;
+            objectObjetive = boxes[boxDestiny].getGameObject();
         }
     }
 }

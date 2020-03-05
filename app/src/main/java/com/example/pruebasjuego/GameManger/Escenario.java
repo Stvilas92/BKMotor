@@ -14,6 +14,7 @@ import com.example.pruebasjuego.DrawObjects.buildings.BuildingType;
 import com.example.pruebasjuego.Screen.Box;
 import com.example.pruebasjuego.Screen.PointIndex;
 import com.example.pruebasjuego.Utils.BitmapManager;
+import com.example.pruebasjuego.Utils.GameTools;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -98,15 +99,15 @@ public class Escenario {
             if(flagContinue) {
                 if (x < PLAYER_INIT_X || y < PLAYER_INIT_Y) {
                     if (type == 0 ) {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.WOOD, drawActionsBar,bitmapManager));
+                        objectsToDraw.add(new Nature(boxes, indexID, GameTools.getBoxByIndex(boxes,x, y), context, NatureType.WOOD, drawActionsBar,bitmapManager));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
                     } else if(type == 1) {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.ROCK, drawActionsBar,bitmapManager));
+                        objectsToDraw.add(new Nature(boxes, indexID, GameTools.getBoxByIndex(boxes,x, y), context, NatureType.ROCK, drawActionsBar,bitmapManager));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
                     }else {
-                        objectsToDraw.add(new Nature(boxes, indexID, getBoxByIndex(x, y), context, NatureType.FOOD, drawActionsBar,bitmapManager));
+                        objectsToDraw.add(new Nature(boxes, indexID,GameTools.getBoxByIndex(boxes,x, y), context, NatureType.FOOD, drawActionsBar,bitmapManager));
                         indexID++;
                         indexesOccuped.add(new PointIndex(x,y));
                     }
@@ -120,20 +121,13 @@ public class Escenario {
     }
 
     public void generateMainBuilding(int initIndexX,int initIndexY){
-        mainBuildingBox = boxes[getBoxByIndex(initIndexX,initIndexY)];
-        objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(initIndexX,initIndexY),context, BuildingType.MAIN, drawActionsBar,drawResourcesBar));
+        mainBuildingBox = boxes[GameTools.getBoxByIndex(boxes,initIndexX,initIndexY)];
+        objectsToDraw.add(new Building(boxes,indexID,GameTools.getBoxByIndex(boxes,initIndexX,initIndexY),context, BuildingType.MAIN, drawActionsBar,drawResourcesBar,bitmapManager));
         indexID++;
-        objectsToDraw.add(new Building(boxes,indexID,getBoxByIndex(23,23),context, BuildingType.TOWER, drawActionsBar,drawResourcesBar));
+        objectsToDraw.add(new Building(boxes,indexID,GameTools.getBoxByIndex(boxes,23,23),context, BuildingType.TOWER, drawActionsBar,drawResourcesBar,bitmapManager));
     }
 
-    public static int getBoxByIndex(int indexX,int indexY){
-        for (int i = indexX*indexY; i < boxes.length; i++) {
-            if(boxes[i].getIndexX() == indexX && boxes[i].getIndexY() == indexY){
-                return i;
-            }
-        }
-        return -1;
-    }
+
 
     public ArrayList<GameObject> getObjectsToDraw() {
         return objectsToDraw;

@@ -16,4 +16,5 @@ public interface GameObject {
     public int onTouchWhenSelected(int boxIndex);
     public boolean isSelectingMode();
     public void setSelectingMode(boolean selectingMode);
+    public void onTouchObject(boolean selectingMode,int x,int y,int boxSelected);
 }

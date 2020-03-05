@@ -28,7 +28,7 @@ public class BitmapManager {
     private Bitmap natureTypeRock,natureTypeWood,natureTypeFood;
     private Bitmap buildMain,buildTower;
     private Bitmap bitmapSoldier,bitmapConstructor,bitmapVillager;
-    private Bitmap bitmapExit,bitmapActionSword,bitmapActionHand;
+    private Bitmap bitmapExit,bitmapActionSword,bitmapActionHandWhite,bitmapActionHandYellow;
     private HashMap<HumanOrientation,Bitmap[]> soldierAction,soldierWalking,soldierDead;
     private HashMap<HumanOrientation,Bitmap[]>  villagerAction,villagerWalking,villagerDead;
     private HashMap<HumanOrientation,Bitmap[]>  constructorAction,constructorWalking,constructorDead;
@@ -122,11 +122,11 @@ public class BitmapManager {
 
     public void getUnitsBitmaps(HumanType humanType){
         switch (humanType) {
-//            case SOLDIER:
-//                this.bitmapSoldier = BitmapManager.getBitmapFromAssets("Units/Soldier/Walking/stopped0000.png",context);
-//                this.bitmapSoldier = BitmapManager.scaleByHeight(this.bitmapSoldier, sizeBoxY);
-//                getUnitMovementBitmap(humanType);
-//                break;
+            case SOLDIER:
+                this.bitmapSoldier = BitmapManager.getBitmapFromAssets("Units/Soldier/Walking/stopped0000.png",context);
+                this.bitmapSoldier = BitmapManager.scaleByHeight(this.bitmapSoldier, sizeBoxY);
+                getUnitMovementBitmap(humanType);
+                break;
 
             case VILLAGER:
                 this.bitmapVillager = BitmapManager.getBitmapFromAssets("Units/Villager/Walking/stopped0000.png",context);
@@ -139,13 +139,21 @@ public class BitmapManager {
                 this.bitmapConstructor = BitmapManager.scaleByHeight(this.bitmapConstructor, sizeBoxY);
                 getUnitMovementBitmap(humanType);
                 break;
+
+            case ENEMY:
+                this.bitmapSoldier = BitmapManager.getBitmapFromAssets("Units/Soldier/Walking/stopped0000.png",context);
+                this.bitmapSoldier = BitmapManager.scaleByHeight(this.bitmapSoldier, sizeBoxY);
+                getUnitMovementBitmap(humanType);
+                break;
         }
         this.bitmapExit = BitmapManager.getBitmapFromAssets("BarIcons/red_boxCross.png",context);
         this.bitmapExit = BitmapManager.scaleByHeight(this.bitmapExit, sizeBoxY);
         this.bitmapActionSword = BitmapManager.getBitmapFromAssets("BarIcons/sword.png",context);
         this.bitmapActionSword = BitmapManager.scaleByHeight(this.bitmapActionSword, sizeBoxY);
-        this.bitmapActionHand = BitmapManager.getBitmapFromAssets("BarIcons/hand.png",context);
-        this.bitmapActionHand = BitmapManager.scaleByHeight(this.bitmapActionHand, sizeBoxY);
+        this.bitmapActionHandWhite = BitmapManager.getBitmapFromAssets("BarIcons/hand.png",context);
+        this.bitmapActionHandWhite = BitmapManager.scaleByHeight(this.bitmapActionHandWhite, sizeBoxY);
+        this.bitmapActionHandYellow = BitmapManager.getBitmapFromAssets("BarIcons/hand.png",context);
+        this.bitmapActionHandYellow = BitmapManager.scaleByHeight(this.bitmapActionHandYellow, sizeBoxY);
     }
 
     /**
@@ -194,7 +202,11 @@ public class BitmapManager {
         for (int i = 0; i < HumanOrientation.values().length ; i++) {
             Bitmap[] bitmapAux = new Bitmap[sizeWalking];
             for (int j = 0; j < sizeWalking; j++) {
-                bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/"+unitPath+"/Walking/walking "+HumanOrientation.values()[i].toString().substring(0,1).toLowerCase()+"000"+j+".png",context);
+                if(j > 9){
+                    bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/" + unitPath + "/Walking/walking " + HumanOrientation.values()[i].toString().substring(0, 1).toLowerCase() + "00" + j + ".png", context);
+                }else {
+                    bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/" + unitPath + "/Walking/walking " + HumanOrientation.values()[i].toString().substring(0, 1).toLowerCase() + "000" + j + ".png", context);
+                }
                 bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], sizeBoxY);
             }
             humanWalking.put(HumanOrientation.values()[i],bitmapAux);
@@ -203,7 +215,11 @@ public class BitmapManager {
         for (int i = 0; i < HumanOrientation.values().length ; i++) {
             Bitmap[] bitmapAux = new Bitmap[sizeAction];
             for (int j = 0; j < sizeAction; j++) {
-                bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/"+unitPath+"/Action/"+unitAction+" "+HumanOrientation.values()[i].toString().substring(0,1).toLowerCase()+"000"+j+".png",context);
+                if(j > 9){
+                    bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/"+unitPath+"/Action/"+unitAction+" "+HumanOrientation.values()[i].toString().substring(0,1).toLowerCase()+"00"+j+".png",context);
+                }else {
+                    bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/"+unitPath+"/Action/"+unitAction+" "+HumanOrientation.values()[i].toString().substring(0,1).toLowerCase()+"000"+j+".png",context);
+                }
                 bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], sizeBoxY);
             }
             humanAction.put(HumanOrientation.values()[i],bitmapAux);
@@ -213,8 +229,11 @@ public class BitmapManager {
             for (int i = 0; i < HumanOrientation.values().length; i++) {
                 Bitmap[] bitmapAux = new Bitmap[sizeDead];
                 for (int j = 0; j < sizeDead; j++) {
-                    bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/" + unitPath + "/Dead/tipping over " + HumanOrientation.values()[i].toString().substring(0, 1).toLowerCase() + "000" + j + ".png",context);
-                    bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], sizeBoxY);
+                    if(j > 9){
+                        bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/" + unitPath + "/Dead/tipping over " + HumanOrientation.values()[i].toString().substring(0, 1).toLowerCase() + "00" + j + ".png", context);
+                    }else {
+                        bitmapAux[j] = BitmapManager.getBitmapFromAssets("Units/" + unitPath + "/Dead/tipping over " + HumanOrientation.values()[i].toString().substring(0, 1).toLowerCase() + "000" + j + ".png", context);
+                    }bitmapAux[j] = BitmapManager.scaleByHeight(bitmapAux[j], sizeBoxY);
                 }
                 humanDead.put(HumanOrientation.values()[i], bitmapAux);
             }
@@ -291,10 +310,6 @@ public class BitmapManager {
         return bitmapActionSword;
     }
 
-    public Bitmap getBitmapActionHand() {
-        return bitmapActionHand;
-    }
-
     public HashMap<HumanOrientation, Bitmap[]> getConstructorAction() {
         return constructorAction;
     }
@@ -333,5 +348,13 @@ public class BitmapManager {
 
     public Bitmap getBitmapSurface() {
         return bitmapSurface;
+    }
+
+    public Bitmap getBitmapActionHandWhite() {
+        return bitmapActionHandWhite;
+    }
+
+    public Bitmap getBitmapActionHandYellow() {
+        return bitmapActionHandYellow;
     }
 }

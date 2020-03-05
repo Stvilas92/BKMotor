@@ -19,6 +19,9 @@ import com.example.pruebasjuego.DrawObjects.humans.HumanOrientation;
 import com.example.pruebasjuego.DrawObjects.humans.HumanType;
 import com.example.pruebasjuego.GameManger.Escenario;
 import com.example.pruebasjuego.Screen.Box;
+import com.example.pruebasjuego.Utils.BitmapManager;
+import com.example.pruebasjuego.Utils.GameTools;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -57,8 +60,10 @@ public class Building implements GameObject {
     private Runnable[] actions;
     private DrawResourcesBar drawResourcesBar;
     private boolean selectingMode = false;
+    private BitmapManager bitmapManager;
 
-    public Building(Box[] boxes, int id, int initBox, Context context, BuildingType buildingType, DrawActionsBar drawActionsBar, DrawResourcesBar drawResourcesBar) {
+    public Building(Box[] boxes, int id, int initBox, Context context, BuildingType buildingType, DrawActionsBar drawActionsBar, DrawResourcesBar drawResourcesBar, BitmapManager bitmapManager) {
+        this.bitmapManager = bitmapManager;
         this.boxes = boxes;
         this.id = id;
         this.initBox = initBox;
@@ -137,7 +142,8 @@ public class Building implements GameObject {
                 if(i == 0 && j == 0){
                     boxesOcuped[index] = initBox;
                 }else{
-                    boxesOcuped[index] = Escenario.getBoxByIndex(boxes[initBox].getIndexX()+i,boxes[initBox].getIndexX()+j);
+                    //TODO : Esto cogia las boxes de escenario, puede dar errores
+                    boxesOcuped[index] = GameTools.getBoxByIndex(boxes,boxes[initBox].getIndexX()+i,boxes[initBox].getIndexX()+j);
                 }
                 index++;
             }
@@ -176,10 +182,7 @@ public class Building implements GameObject {
     private void makeObjectToDraw(){
         switch (buildingType) {
             case MAIN:
-                this.sizeX = 2;
-                this.sizeY = 2;
-                this.buildBitmap = getBitmapFromAssets("Buildings/main.png");
-                this.buildBitmap = scaleByHeight(this.buildBitmap, this.boxes[0].getSizeY() * sizeY);
+                this.buildBitmap = bitmapManager.getBuildMain();
                 getBoxesToDraw();
                 boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.MAIN_BUILDING,this);
                 setUnitsBitmaps();
@@ -188,31 +191,28 @@ public class Building implements GameObject {
                 break;
 
             case TOWER:
-                this.sizeX = 1;
-                this.sizeY = 1;
-                this.buildBitmap = getBitmapFromAssets("Buildings/tower.png");
-                this.buildBitmap = scaleByHeight(this.buildBitmap, this.boxes[0].getSizeY() * sizeY);
+                this.buildBitmap = bitmapManager.getBuildTower();
                 getBoxesToDraw();
                 boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.TOWER,this);
                 break;
 
-            case WALL:
-                this.sizeX = 1;
-                this.sizeY = 1;
-                this.buildBitmap = getBitmapFromAssets("Buildings/wall.png");
-                this.buildBitmap = scaleByHeight(this.buildBitmap, this.boxes[0].getSizeY() * sizeY);
-                getBoxesToDraw();
-                boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.WALL,this);
-                break;
-
-            case CATAPULT:
-                this.sizeX = 1;
-                this.sizeY = 1;
-                this.buildBitmap = getBitmapFromAssets("Buildings/catapult.png");
-                this.buildBitmap = scaleByHeight(this.buildBitmap, this.boxes[0].getSizeY() * sizeY);
-                getBoxesToDraw();
-                boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.CATAPULT,this);
-                break;
+//            case WALL:
+//                this.sizeX = 1;
+//                this.sizeY = 1;
+//                this.buildBitmap = getBitmapFromAssets("Buildings/wall.png");
+//                this.buildBitmap = scaleByHeight(this.buildBitmap, this.boxes[0].getSizeY() * sizeY);
+//                getBoxesToDraw();
+//                boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.WALL,this);
+//                break;
+//
+//            case CATAPULT:
+//                this.sizeX = 1;
+//                this.sizeY = 1;
+//                this.buildBitmap = getBitmapFromAssets("Buildings/catapult.png");
+//                this.buildBitmap = scaleByHeight(this.buildBitmap, this.boxes[0].getSizeY() * sizeY);
+//                getBoxesToDraw();
+//                boxes[initBox].setDrawObjectTypeAndSubtype(DrawObjectType.BUILDING,DrawObjectSubtype.CATAPULT,this);
+//                break;
         }
     }
 
@@ -308,21 +308,21 @@ public class Building implements GameObject {
                 break;
             case CREATING_SOLDIER:
                 if(drawResourcesBar.getActualFood() >= SOLDIER_FOOD_COST) {
-                    Human soldier = new Human(boxes, 1, initBox - 1, context, HumanType.SOLDIER, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar);
+                    Human soldier = new Human(boxes, 1, initBox - 1, context, HumanType.SOLDIER, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar,bitmapManager);
                     this.setBuildingState(BuildingState.STOPPED);
                     drawResourcesBar.setActualFood(drawResourcesBar.getActualFood()-SOLDIER_FOOD_COST);
                 }
                 break;
             case CREATING_VILLAGER:
                 if(drawResourcesBar.getActualFood() >= VILLAGER_FOOD_COST) {
-                    Human villager = new Human(boxes, 1, initBox - 1, context, HumanType.VILLAGER, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar);
+                    Human villager = new Human(boxes, 1, initBox - 1, context, HumanType.VILLAGER, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar,bitmapManager);
                     this.setBuildingState(BuildingState.STOPPED);
                     drawResourcesBar.setActualFood(drawResourcesBar.getActualFood()-VILLAGER_FOOD_COST);
                 }
                 break;
             case CREATING_CONSTRUCOR:
                 if(drawResourcesBar.getActualFood() >= CONSTRUCTOR_FOOD_COST) {
-                    Human constructor = new Human(boxes, 1, initBox - 1, context, HumanType.CONSTRUCTOR, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar);
+                    Human constructor = new Human(boxes, 1, initBox - 1, context, HumanType.CONSTRUCTOR, drawActionsBar, HumanOrientation.SOUTH, drawResourcesBar,bitmapManager);
                     this.setBuildingState(BuildingState.STOPPED);
                     drawResourcesBar.setActualFood(drawResourcesBar.getActualFood()-CONSTRUCTOR_FOOD_COST);
                 }
@@ -344,6 +344,20 @@ public class Building implements GameObject {
     public void setSelectingMode(boolean selectingMode) {
         this.selectingMode =  selectingMode;
 
+    }
+
+    @Override
+    public void onTouchObject(boolean selecttingMode, int x,int y,int boxSelected) {
+        if(!isSelected()){
+            if(!selectingMode) {
+                GameTools.deselectedAll(boxes);
+                selected = true;
+            }
+        }else{
+            if(y >= drawActionsBar.getInitY()){
+                onTouchActionBarObject(x,y);
+            }
+        }
     }
 
     public int getActualLife() {
